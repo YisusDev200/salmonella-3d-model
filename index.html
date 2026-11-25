@@ -73,6 +73,33 @@ h1 {
 }
 h1 i { font-style: italic; color: var(--safranin); }
 .lede { margin: 0; color: var(--ink-2); max-width: 64ch; font-size: 1.02rem; }
+.xlink {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  padding: 7px 14px 7px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+  font: 600 14px/1.25 var(--font-body);
+  text-decoration: none;
+}
+.xlink:hover { border-color: var(--safranin); }
+.xlink:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.xlink-k {
+  flex: none;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: var(--safranin);
+  color: var(--safranin-ink);
+  font: 500 10px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.xlink-arrow { flex: none; color: var(--safranin); }
 
 /* Pestañas */
 .tabs { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -131,7 +158,7 @@ h1 i { font-style: italic; color: var(--safranin); }
 }
 .stage canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
 .stage canvas:active { cursor: grabbing; }
-.tags { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.tags { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
 .tag {
   position: absolute;
   left: 0;
@@ -149,7 +176,7 @@ h1 i { font-style: italic; color: var(--safranin); }
 }
 .tag.is-back { opacity: 0.3; }
 .tag.is-hot { background: var(--safranin); color: var(--safranin-ink); border-color: transparent; opacity: 1; z-index: 99999 !important; }
-.stage-tools { position: absolute; left: 12px; top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+.stage-tools { position: absolute; z-index: 2; left: 12px; top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
 .tool {
   font: 600 12px/1 var(--font-body);
   padding: 8px 10px;
@@ -162,6 +189,7 @@ h1 i { font-style: italic; color: var(--safranin); }
 .tool[aria-pressed="true"] { background: var(--violet); color: var(--violet-ink); border-color: transparent; }
 .stage-hint {
   position: absolute;
+  z-index: 2;
   right: 12px;
   bottom: 10px;
   max-width: calc(100% - 24px);
@@ -175,6 +203,7 @@ h1 i { font-style: italic; color: var(--safranin); }
 }
 .stage-loading, .stage-msg {
   position: absolute;
+  z-index: 3;
   inset: 0;
   display: grid;
   place-items: center;
@@ -295,8 +324,21 @@ h1 i { font-style: italic; color: var(--safranin); }
 }
 @media (max-width: 560px) {
   .page { padding-block: 20px 36px; gap: 16px; }
-  .stage { height: clamp(360px, 58vh, 520px); }
+  .tab { flex: 1 1 auto; justify-content: center; gap: 8px; padding: 8px 10px 8px 8px; font-size: 13.5px; }
+  .stage {
+    height: clamp(340px, 112vw, 500px);
+    margin-inline: -16px;
+    border-radius: 0;
+    border-inline: 0;
+  }
+  .stage-tools { left: 8px; top: 8px; gap: 4px; }
+  .tool { padding: 7px 9px; font-size: 11.5px; }
+  .tag { font-size: 10.5px; padding: 3px 6px; }
+  .tag.is-back { opacity: 0; }
+  .tag.is-hot { opacity: 1; }
+  .card, .ficha { padding: 18px 16px 20px; border-radius: 14px; }
   .facts { grid-template-columns: minmax(0, 1fr); }
+  .specs { gap: 6px; }
   .specs div { padding: 9px 10px; }
   .stage-hint { display: none; }
 }
@@ -320,6 +362,7 @@ h1 i { font-style: italic; color: var(--safranin); }
     <p class="eyebrow">Proyecto de microbiología · 2 propuestas</p>
     <h1>Maqueta de <i>Salmonella</i></h1>
     <p class="lede">Míralas en 3D antes de armar la física. Gira el modelo, acércate y pasa el cursor (o toca) cada parte de la lista para ubicarla.</p>
+    <a class="xlink" href="bottle.html" data-local="maqueta-botella.html"><span class="xlink-k">Cómo hacerla</span><span>Versión con botella y plastilina</span><span class="xlink-arrow" aria-hidden="true">→</span></a>
   </header>
 
   <div class="tabs" role="tablist" aria-label="Propuestas">
@@ -428,6 +471,9 @@ h1 i { font-style: italic; color: var(--safranin); }
 
 <script>
 (function () {
+  if (location.protocol === 'file:') {
+    document.querySelectorAll('a[data-local]').forEach(function (a) { a.setAttribute('href', a.getAttribute('data-local')); });
+  }
   var views = ['corte', 'infeccion'];
   var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
   var panels = Array.prototype.slice.call(document.querySelectorAll('.prop'));
@@ -1143,16 +1189,20 @@ function start() {
   let current = null;
   let tagsOn = true;
   let anim = null;
+  let userMoved = false;
+  let sizeGen = 0;
 
   function viewPose(set) {
     const v = set.view;
     const w = stageEl.clientWidth || 1, h = stageEl.clientHeight || 1;
     const dir = v.pos.clone().sub(v.target);
-    const need = v.halfW / (Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * (w / h));
+    const hw = w / h < 1 ? v.halfW * 0.8 : v.halfW;
+    const need = hw / (Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * (w / h));
     const k = Math.max(1, need / dir.length());
     return { pos: v.target.clone().addScaledVector(dir, k), target: v.target.clone() };
   }
   function frame(instant) {
+    userMoved = false;
     const pose = viewPose(current);
     if (instant) {
       camera.position.copy(pose.pos);
@@ -1197,6 +1247,9 @@ function start() {
       li.addEventListener('pointerleave', off);
       li.addEventListener('focus', on);
       li.addEventListener('blur', off);
+      li.addEventListener('click', () => {
+        if (window.matchMedia('(max-width: 900px)').matches) stageEl.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+      });
     });
   });
 
@@ -1210,7 +1263,7 @@ function start() {
     btnSpin.setAttribute('aria-pressed', String(controls.autoRotate));
   });
   btnReset.addEventListener('click', () => frame(reduceMotion));
-  controls.addEventListener('start', () => { anim = null; });
+  controls.addEventListener('start', () => { anim = null; userMoved = true; });
 
   function resize() {
     const w = stageEl.clientWidth, h = stageEl.clientHeight;
@@ -1218,32 +1271,66 @@ function start() {
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+    sizeGen++;
+    if (current && !userMoved && !anim) frame(true);
   }
   new ResizeObserver(resize).observe(stageEl);
   resize();
 
   const tmpH = V(0, 0, 0), tmpA = V(0, 0, 0), toCam = V(0, 0, 0);
+  // Etiquetas: se colocan junto a la cabeza del alfiler y se separan si chocan
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { sizeGen++; });
+  const overlaps = (a, b) => a.left < b.left + b.w + 2 && b.left < a.left + a.w + 2 && a.top < b.top + b.h + 2 && b.top < a.top + a.h + 2;
   function placeTags() {
     const w = stageEl.clientWidth, h = stageEl.clientHeight;
+    const narrow = w < 560;
+    const boxes = [];
     for (const p of current.pins) {
       if (p.el.hidden) continue;
       tmpH.copy(p.wHead).project(camera);
-      tmpA.copy(p.wAnchor).project(camera);
       if (tmpH.z > 1) { p.el.style.visibility = 'hidden'; continue; }
       p.el.style.visibility = '';
+      tmpA.copy(p.wAnchor).project(camera);
       const hx = (tmpH.x * 0.5 + 0.5) * w, hy = (-tmpH.y * 0.5 + 0.5) * h;
       const dx = hx - (tmpA.x * 0.5 + 0.5) * w, dy = hy - (-tmpA.y * 0.5 + 0.5) * h;
-      let tx = '-50%', ty = '-100%', ox = 0, oy = -9;
+      if (p.gen !== sizeGen || !p.tw) { p.tw = p.el.offsetWidth; p.th = p.el.offsetHeight; p.gen = sizeGen; }
+      let left, top;
       if (Math.abs(dx) > Math.abs(dy) * 1.4) {
-        ty = '-50%'; oy = 0;
-        if (dx > 0) { tx = '0%'; ox = 9; } else { tx = '-100%'; ox = -9; }
+        top = hy - p.th / 2;
+        left = dx > 0 ? hx + 9 : hx - 9 - p.tw;
       } else if (dy > 0) {
-        ty = '0%'; oy = 9;
+        left = hx - p.tw / 2;
+        top = hy + 9;
+      } else {
+        left = hx - p.tw / 2;
+        top = hy - 9 - p.th;
       }
-      p.el.style.transform = `translate(${(hx + ox).toFixed(1)}px, ${(hy + oy).toFixed(1)}px) translate(${tx}, ${ty})`;
       toCam.copy(camera.position).sub(p.wHead).normalize();
-      p.el.classList.toggle('is-back', p.wDir.dot(toCam) < -0.2);
-      p.el.style.zIndex = String(Math.round((1 - tmpH.z) * 10000));
+      const back = p.wDir.dot(toCam) < -0.2;
+      p.el.classList.toggle('is-back', back);
+      const z = Math.round((1 - tmpH.z) * 10000);
+      p.el.style.zIndex = String(z);
+      boxes.push({ p, left, top, top0: top, w: p.tw, h: p.th, back, z, hot: p.el.classList.contains('is-hot') });
+    }
+    boxes.sort((a, b) => (b.hot - a.hot) || (a.back - b.back) || (b.z - a.z));
+    const clampBox = bx => {
+      bx.left = Math.min(Math.max(bx.left, 4), w - bx.w - 4);
+      bx.top = Math.min(Math.max(bx.top, 4), h - bx.h - 4);
+    };
+    const placed = [];
+    for (const bx of boxes) {
+      clampBox(bx);
+      if (!(narrow && bx.back && !bx.hot)) {
+        for (let tries = 0; tries < 12; tries++) {
+          const hit = placed.find(q => overlaps(q, bx));
+          if (!hit) break;
+          const up = hit.top - bx.h - 3, down = hit.top + hit.h + 3;
+          bx.top = up >= 4 && Math.abs(up - bx.top0) <= Math.abs(down - bx.top0) ? up : down;
+          clampBox(bx);
+        }
+        placed.push(bx);
+      }
+      bx.p.el.style.transform = `translate(${bx.left.toFixed(1)}px, ${bx.top.toFixed(1)}px)`;
     }
   }
 

@@ -1,0 +1,1160 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="only light">
+<title>Salmonella con botella</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=Inter:wght@400;500;600&family=Schibsted+Grotesk:ital,wght@0,700;0,800;1,800&display=swap">
+<style>
+/* Layout: escenario 3D con barra de pasos + tarjeta con el paso a paso, lista de compras y tips.
+   Color: paleta de la tinción de Gram; siempre en modo claro. */
+:root {
+  --ground: #f3f1f6;
+  --paper: #ffffff;
+  --ink: #1d1a23;
+  --ink-2: #5f5969;
+  --rule: #e2dee8;
+  --safranin: #c2255c;
+  --safranin-ink: #ffffff;
+  --safranin-soft: #fbe5ee;
+  --violet: #5a3e9e;
+  --violet-ink: #ffffff;
+  --stage-hi: #ffffff;
+  --stage-lo: #e4e0eb;
+  --tag-bg: rgba(255, 255, 255, 0.94);
+  --tag-rule: rgba(29, 26, 35, 0.14);
+  --shadow: rgba(36, 20, 48, 0.14);
+  --focus: #5a3e9e;
+  --font-display: "Schibsted Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: only light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+.page {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 28px 16px 48px;
+  display: grid;
+  gap: 20px;
+}
+.head { display: grid; gap: 8px; }
+.eyebrow {
+  margin: 0;
+  font: 500 11.5px/1.2 var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--safranin);
+}
+h1 {
+  margin: 0;
+  font: 800 clamp(1.9rem, 1.3rem + 2.2vw, 2.9rem)/1.05 var(--font-display);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+h1 i { font-style: italic; color: var(--safranin); }
+.lede { margin: 0; color: var(--ink-2); max-width: 66ch; font-size: 1.02rem; }
+.back {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  padding: 7px 12px 7px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--violet);
+  font: 600 13px/1.2 var(--font-body);
+  text-decoration: none;
+}
+.back:hover { border-color: var(--violet); }
+.back:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.bench {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.stage {
+  position: relative;
+  height: clamp(400px, 66vh, 660px);
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  background: radial-gradient(ellipse at 50% 32%, var(--stage-hi), var(--stage-lo) 78%);
+}
+@media (min-width: 901px) {
+  .stage { position: sticky; top: 14px; }
+}
+.stage canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.stage canvas:active { cursor: grabbing; }
+.tags { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+.tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font: 600 12px/1.2 var(--font-body);
+  color: var(--ink);
+  background: var(--tag-bg);
+  border: 1px solid var(--tag-rule);
+  border-radius: 6px;
+  padding: 4px 8px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px var(--shadow);
+  transition: opacity 0.2s;
+  will-change: transform;
+}
+.tag.is-back { opacity: 0.3; }
+.stage-tools { position: absolute; z-index: 2; left: 12px; top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+.tool {
+  font: 600 12px/1 var(--font-body);
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+}
+.tool[aria-pressed="true"] { background: var(--violet); color: var(--violet-ink); border-color: transparent; }
+.tool:disabled { opacity: 0.4; cursor: default; }
+.tool:focus-visible, .step:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.stepbar {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  width: min(380px, calc(100% - 24px));
+  border-radius: 12px;
+  border: 1px solid var(--rule);
+  background: var(--tag-bg);
+  box-shadow: 0 2px 10px var(--shadow);
+}
+.stepbar .tool { flex: none; width: 36px; height: 36px; padding: 0; font-size: 20px; display: grid; place-items: center; }
+.stepbar-label { flex: 1; margin: 0; min-width: 0; text-align: center; }
+.stepbar-label span {
+  display: block;
+  font: 500 10.5px/1.3 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.stepbar-label b { display: block; font: 600 14px/1.25 var(--font-body); }
+.stage-loading, .stage-msg {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  text-align: center;
+  color: var(--ink-2);
+  font: 500 13px/1.5 var(--font-mono);
+}
+.stage-msg { background: var(--paper); font-family: var(--font-body); font-size: 14px; }
+.stage-msg p { max-width: 42ch; margin: 0; }
+.stage-msg strong { color: var(--ink); }
+
+.card {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 18px;
+  padding: 22px 20px 24px;
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+}
+.card h2 { margin: 0; font: 800 1.45rem/1.15 var(--font-display); letter-spacing: -0.01em; }
+.card-desc { margin: 0; color: var(--ink-2); }
+.specs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.specs div { background: var(--ground); border-radius: 10px; padding: 10px 12px; min-width: 0; }
+.specs dt {
+  margin-bottom: 6px;
+  font: 500 10.5px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.specs dd { margin: 0; font-weight: 600; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.meter { display: inline-flex; gap: 3px; }
+.meter i { width: 7px; height: 7px; border-radius: 50%; background: var(--rule); }
+.meter[data-level="2"] i:nth-child(-n + 2) { background: var(--safranin); }
+.card h3 {
+  margin: 6px 0 0;
+  font: 500 11px/1 var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.steps { list-style: none; margin: 0 -8px; padding: 0; display: grid; gap: 2px; }
+.step {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  width: 100%;
+  padding: 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.step:hover { background: var(--ground); }
+.step.is-current { background: var(--safranin-soft); }
+.stepn {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--ground);
+  border: 1px solid var(--rule);
+  font: 500 12px/1 var(--font-mono);
+}
+.step.is-current .stepn { background: var(--safranin); color: var(--safranin-ink); border-color: transparent; }
+.pt { display: grid; gap: 2px; min-width: 0; }
+.pt b { font-weight: 600; }
+.pt span { color: var(--ink-2); font-size: 13.5px; line-height: 1.45; }
+.mats { margin: 0; padding-left: 18px; display: grid; gap: 5px; }
+
+@media (max-width: 900px) {
+  .bench { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .page { padding: 20px 16px 36px; gap: 16px; }
+  .stage {
+    height: clamp(360px, 118vw, 520px);
+    margin-inline: -16px;
+    border-radius: 0;
+    border-inline: 0;
+  }
+  .stage-tools { left: 8px; top: 8px; gap: 4px; }
+  .tool { padding: 7px 9px; font-size: 11.5px; }
+  .stepbar { bottom: 10px; }
+  .tag { font-size: 10.5px; padding: 3px 6px; }
+  .tag.is-back { opacity: 0; }
+  .card { padding: 18px 16px 20px; border-radius: 14px; }
+  .specs { gap: 6px; }
+  .specs div { padding: 9px 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tag { transition: none; }
+}
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div class="page">
+  <header class="head">
+    <a class="back" href="./" data-local="maqueta-salmonella.html"><span aria-hidden="true">←</span>Ver las propuestas en 3D</a>
+    <p class="eyebrow">Versión con botella y plastilina · propuesta con corte</p>
+    <h1><i>Salmonella</i> con botella</h1>
+    <p class="lede">Así se vería la bacteria con corte armada con una botella de PET y plastilina. Usa las flechas o toca un paso para verla armarse, y arrastra para girarla.</p>
+  </header>
+
+  <div class="bench">
+    <section class="stage" aria-label="Vista 3D de la maqueta con botella">
+      <canvas id="stage-canvas" role="img" aria-label="Modelo 3D de la maqueta con botella"></canvas>
+      <div class="tags" id="tags" aria-hidden="true"></div>
+      <div class="stage-tools">
+        <button type="button" class="tool" id="btn-tags" aria-pressed="true">Etiquetas</button>
+        <button type="button" class="tool" id="btn-spin" aria-pressed="false">Girar solo</button>
+        <button type="button" class="tool" id="btn-reset">Centrar</button>
+      </div>
+      <div class="stepbar">
+        <button type="button" class="tool" id="step-prev" aria-label="Paso anterior">‹</button>
+        <p class="stepbar-label" aria-live="polite"><span id="step-num">Paso 7 de 7</span><b id="step-name">Monta y etiqueta</b></p>
+        <button type="button" class="tool" id="step-next" aria-label="Paso siguiente" disabled>›</button>
+      </div>
+      <div class="stage-loading" id="stage-loading">Cargando modelo 3D…</div>
+      <div class="stage-msg" id="stage-msg" hidden>
+        <p><strong>No se pudo mostrar el 3D.</strong> Revisa tu conexión a internet o abre la página en Chrome, Edge o Firefox. El paso a paso sigue disponible a un lado.</p>
+      </div>
+    </section>
+
+    <aside class="card">
+      <h2>Cómo armarla</h2>
+      <p class="card-desc">La botella hace el cuerpo del bacilo y la plastilina las capas y lo de adentro. Toca un paso para verlo en 3D.</p>
+      <dl class="specs">
+        <div><dt>Dificultad</dt><dd><span class="meter" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span>Media</dd></div>
+        <div><dt>Tiempo</dt><dd>1–2 días</dd></div>
+        <div><dt>Costo</dt><dd>Bajo</dd></div>
+      </dl>
+      <h3>Paso a paso</h3>
+      <ol class="steps">
+        <li><button type="button" class="step" data-step="1"><span class="stepn">1</span><span class="pt"><b>Corta la botella</b><span>Usa una botella lisa de 1.5 L sin etiqueta. Quítale el cuello y corta una ventana de unos 16 cm en la mitad de arriba: marca con plumón, empieza con cúter y termina con tijeras. Haz dos cunas de cartón para que no ruede.</span></span></button></li>
+        <li><button type="button" class="step" data-step="2"><span class="stepn">2</span><span class="pt"><b>Redondea y arma el piso</b><span>Rellena la parte de abajo de la ventana con papel arrugado y tápala con un rectángulo de cartón al ras del corte. Forma las puntas redondas con bolas de papel periódico y cinta masking.</span></span></button></li>
+        <li><button type="button" class="step" data-step="3"><span class="stepn">3</span><span class="pt"><b>Forra con plastilina rosa</b><span>Cubre todo con cinta masking para que la plastilina se pegue. Luego extiende una capa de 2–3 mm de plastilina rosa por fuera y en las puntas.</span></span></button></li>
+        <li><button type="button" class="step" data-step="4"><span class="stepn">4</span><span class="pt"><b>Pon las capas en el borde</b><span>Rueda tiras delgadas de plastilina y pégalas en todo el borde de la ventana: rosa afuera, luego amarilla y luego azul.</span></span></button></li>
+        <li><button type="button" class="step" data-step="5"><span class="stepn">5</span><span class="pt"><b>Rellena el interior</b><span>Cubre el piso con plastilina crema. Encima pon espaguetis morados enredados (ADN), bolitas negras (ribosomas) y aros verdes (plásmidos).</span></span></button></li>
+        <li><button type="button" class="step" data-step="6"><span class="stepn">6</span><span class="pt"><b>Flagelos y fimbrias</b><span>Enrolla limpiapipas en un lápiz, estíralos un poco y mételos en hoyitos hechos con la punta de las tijeras. Clava medios palillos por toda la superficie.</span></span></button></li>
+        <li><button type="button" class="step is-current" data-step="7" aria-current="step"><span class="stepn">7</span><span class="pt"><b>Monta y etiqueta</b><span>Pega las cunas a la base y apoya la bacteria. Agrega el letrero, la ficha de inocuidad y banderitas con alfiler.</span></span></button></li>
+      </ol>
+      <h3>Lista de compras</h3>
+      <ul class="mats">
+        <li>Botella de PET de 1.5 L, lisa (puede ser reciclada)</li>
+        <li>Plastilina rosa, unos 300 g (es la que más se gasta)</li>
+        <li>Plastilina crema o blanca, amarilla, azul, morada, negra y verde (poca de cada una)</li>
+        <li>8 a 10 limpiapipas morados y un puño de palillos</li>
+        <li>Cinta masking, papel periódico y cartón</li>
+        <li>Base de cartón grueso o MDF de unos 45 × 30 cm</li>
+        <li>Alfileres y papel para las banderitas</li>
+        <li>Plumón, cúter y tijeras</li>
+      </ul>
+      <h3>Tips</h3>
+      <ul class="mats">
+        <li>Calienta la plastilina en las manos antes de extenderla; así rinde más y no se cuartea.</li>
+        <li>Si no te alcanza la rosa, pinta la masking con acrílico rosa en la parte de abajo, que casi no se ve.</li>
+        <li>No la dejes al sol ni en el carro: la plastilina se ablanda y se escurre.</li>
+        <li>Si los palillos no se sostienen, ponles una gota de silicón.</li>
+      </ul>
+    </aside>
+  </div>
+</div>
+
+<script>
+if (location.protocol === 'file:') {
+  document.querySelectorAll('a[data-local]').forEach(function (a) { a.setAttribute('href', a.getAttribute('data-local')); });
+}
+setTimeout(function () {
+  if (!window.__maquetaReady) {
+    document.getElementById('stage-loading').hidden = true;
+    document.getElementById('stage-msg').hidden = false;
+  }
+}, 15000);
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+
+window.__maquetaReady = true;
+
+const stageEl = document.querySelector('.stage');
+const canvas = document.getElementById('stage-canvas');
+const tagLayer = document.getElementById('tags');
+const loadingEl = document.getElementById('stage-loading');
+const msgEl = document.getElementById('stage-msg');
+const btnTags = document.getElementById('btn-tags');
+const btnSpin = document.getElementById('btn-spin');
+const btnReset = document.getElementById('btn-reset');
+const btnPrev = document.getElementById('step-prev');
+const btnNext = document.getElementById('step-next');
+const stepNum = document.getElementById('step-num');
+const stepName = document.getElementById('step-name');
+const stepButtons = Array.from(document.querySelectorAll('.step'));
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+try {
+  start();
+} catch (err) {
+  loadingEl.hidden = true;
+  msgEl.hidden = false;
+  console.error(err);
+}
+
+function start() {
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setClearColor(0x000000, 0);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+
+  const scene = new THREE.Scene();
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+  pmrem.dispose();
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xcfc6d8, 0.45));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.9);
+  sun.position.set(4.5, 9, 6.5);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  const sc = sun.shadow.camera;
+  sc.left = -7; sc.right = 7; sc.top = 7; sc.bottom = -7; sc.near = 1; sc.far = 30;
+  sc.updateProjectionMatrix();
+  sun.shadow.bias = -0.0005;
+  sun.shadow.normalBias = 0.025;
+  scene.add(sun);
+
+  const catcher = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.ShadowMaterial({ opacity: 0.14 }));
+  catcher.rotation.x = -Math.PI / 2;
+  catcher.position.y = -0.31;
+  catcher.receiveShadow = true;
+  scene.add(catcher);
+
+  const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
+  const controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 2.5;
+  controls.maxDistance = 20;
+  controls.maxPolarAngle = Math.PI * 0.495;
+  controls.autoRotateSpeed = 1.1;
+
+  // ---------- utilidades ----------
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  const UP = V(0, 1, 0);
+  const mm = new THREE.Matrix4();
+
+  function rng(seed) {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function shadowed(o, receive = true) {
+    o.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = receive; } });
+    return o;
+  }
+  const std = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.72, metalness: 0, ...o });
+
+  // Colores de plastilina y materiales de papelería
+  const COL = {
+    skin: '#ec6f95', om: '#d9507a', pg: '#f5c532', im: '#3f7fd0', cream: '#f4e6cc', dna: '#7046b8',
+    ribo: '#34303a', plasmid: '#2fa36b', pipe: '#8a3d8f', pick: '#e6cc9c', card: '#b98a57',
+    bottle: '#d6ecf7', stick: '#d6b68a', pinHead: '#c2255c',
+  };
+  const clay = c => std(c, { roughness: 0.5 });
+  const M = {
+    skin: clay(COL.skin),
+    om: clay(COL.om),
+    pg: clay(COL.pg),
+    im: clay(COL.im),
+    cream: std(COL.cream, { roughness: 0.55, side: THREE.DoubleSide }),
+    dna: clay(COL.dna),
+    ribo: clay(COL.ribo),
+    plasmid: clay(COL.plasmid),
+    pipe: std(COL.pipe, { roughness: 1 }),
+    pick: std(COL.pick, { roughness: 0.8 }),
+    card: std(COL.card, { roughness: 0.92, side: THREE.DoubleSide }),
+    stick: std(COL.stick, { roughness: 0.8 }),
+    bottle: new THREE.MeshPhysicalMaterial({ color: COL.bottle, roughness: 0.06, metalness: 0, transparent: true, opacity: 0.36, clearcoat: 1, side: THREE.DoubleSide, depthWrite: false }),
+    pinStick: std('#cfcbd6', { roughness: 0.3, metalness: 0.7 }),
+    pinHead: std(COL.pinHead, { roughness: 0.35 }),
+  };
+
+  const maxAniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  function canvasTex(w, h, draw) {
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    draw(c.getContext('2d'), w, h);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.anisotropy = maxAniso;
+    return t;
+  }
+
+  // ---------- puntos sobre la cápsula (bacilo acostado sobre X) ----------
+  function capsulePoint(R, H, s, phi, pos, nrm) {
+    const cap = (Math.PI * R) / 2;
+    const d = s * (2 * cap + 2 * H);
+    let px, py, nx, ny;
+    if (d < cap) {
+      const a = -Math.PI / 2 + d / R;
+      nx = Math.cos(a); ny = Math.sin(a); px = R * nx; py = -H + R * ny;
+    } else if (d < cap + 2 * H) {
+      nx = 1; ny = 0; px = R; py = -H + (d - cap);
+    } else {
+      const a = (d - cap - 2 * H) / R;
+      nx = Math.cos(a); ny = Math.sin(a); px = R * nx; py = H + R * ny;
+    }
+    const sp = Math.sin(phi), cp = Math.cos(phi);
+    pos.set(py, -px * sp, px * cp);
+    nrm.set(ny, -nx * sp, nx * cp);
+    return px;
+  }
+  function sampleCapsule(R, H, count, r, accept, minDist = 0) {
+    const out = [];
+    for (let guard = 0; out.length < count && guard < count * 300; guard++) {
+      const s = r(), phi = r() * Math.PI * 2;
+      const p = new THREE.Vector3(), n = new THREE.Vector3();
+      const px = capsulePoint(R, H, s, phi, p, n);
+      if (r() > px / R + 0.03) continue;
+      if (accept && !accept(phi, p, n)) continue;
+      if (minDist && out.some(o => o.p.distanceToSquared(p) < minDist * minDist)) continue;
+      out.push({ p, n, phi });
+    }
+    return out;
+  }
+  function sticks(samples, r, len0, len1, rad, mat, inset) {
+    const geo = new THREE.CylinderGeometry(rad * 0.7, rad, 1, 6, 1);
+    geo.translate(0, 0.5, 0);
+    const im = new THREE.InstancedMesh(geo, mat, samples.length);
+    const q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3();
+    samples.forEach((o, i) => {
+      q.setFromUnitVectors(UP, o.n);
+      p.copy(o.p).addScaledVector(o.n, -inset);
+      s.set(1, len0 + r() * (len1 - len0), 1);
+      im.setMatrixAt(i, mm.compose(p, q, s));
+    });
+    im.instanceMatrix.needsUpdate = true;
+    im.castShadow = true;
+    im.frustumCulled = false;
+    return im;
+  }
+  function flagellumPoints(p, n, r, o) {
+    const { lift = 0.1, liftNeg = 0.5 } = o;
+    const D = n.clone();
+    D.addScaledVector(UP, n.y < 0 ? liftNeg : lift);
+    D.x += (r() - 0.5) * 0.35; D.y += (r() - 0.5) * 0.25; D.z += (r() - 0.5) * 0.35;
+    D.normalize();
+    const ref = Math.abs(D.y) < 0.92 ? UP : V(1, 0, 0);
+    const e1 = new THREE.Vector3().crossVectors(D, ref).normalize();
+    const e2 = new THREE.Vector3().crossVectors(D, e1).normalize();
+    const ba = r() * Math.PI * 2;
+    const bend = e1.clone().multiplyScalar(Math.cos(ba)).addScaledVector(e2, Math.sin(ba));
+    const ph = r() * Math.PI * 2;
+    const pts = [];
+    for (let i = 0; i <= 80; i++) {
+      const t = i / 80;
+      const k = Math.min(1, t / 0.18);
+      const env = k * k * (3 - 2 * k);
+      const w = 2 * Math.PI * o.waves * t + ph;
+      const q = p.clone()
+        .addScaledVector(n, -0.04 * (1 - t))
+        .addScaledVector(D, o.length * t)
+        .addScaledVector(bend, o.length * 0.25 * t * t)
+        .addScaledVector(e1, Math.cos(w) * o.amp * env)
+        .addScaledVector(e2, Math.sin(w) * o.amp * env);
+      if (o.yMin !== undefined && q.y < o.yMin) q.y = o.yMin;
+      pts.push(q);
+    }
+    return pts;
+  }
+  function tube(pts, radius, mat) {
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 160, radius, 8, false), mat));
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(radius * 1.1, 10, 8), mat);
+    tip.position.copy(pts[pts.length - 1]);
+    g.add(tip);
+    return shadowed(g);
+  }
+
+  // ---------- base de madera y letreros ----------
+  const woodMat = new THREE.MeshStandardMaterial({
+    roughness: 0.62,
+    map: canvasTex(1024, 512, (g, W, H) => {
+      g.fillStyle = '#c99c6e';
+      g.fillRect(0, 0, W, H);
+      const r = rng(7);
+      for (let i = 0; i < 110; i++) {
+        const y0 = r() * H;
+        const dark = r() < 0.55;
+        g.strokeStyle = dark ? `rgba(110, 70, 36, ${0.06 + r() * 0.12})` : `rgba(255, 235, 205, ${0.05 + r() * 0.1})`;
+        g.lineWidth = 1 + r() * 3.5;
+        g.beginPath();
+        for (let x = 0; x <= W; x += 16) {
+          const y = y0 + Math.sin(x * 0.005 + i) * 7 + Math.sin(x * 0.019 + i * 2.3) * 2.5;
+          if (x === 0) g.moveTo(x, y); else g.lineTo(x, y);
+        }
+        g.stroke();
+      }
+    }),
+  });
+  function base(W, D) {
+    const m = new THREE.Mesh(new RoundedBoxGeometry(W, 0.3, D, 3, 0.05), woodMat);
+    m.position.y = -0.15;
+    m.castShadow = true;
+    m.receiveShadow = true;
+    return m;
+  }
+  const edgeMat = std('#efe9df', { roughness: 0.85 });
+  function sign(w, h, slope, draw, x, z) {
+    const g = new THREE.Group();
+    const L = h * Math.cos(slope), Hw = h * Math.sin(slope);
+    const tri = new THREE.Shape([new THREE.Vector2(0, 0), new THREE.Vector2(L, 0), new THREE.Vector2(L, Hw)]);
+    const wedgeGeo = new THREE.ExtrudeGeometry(tri, { depth: w * 0.9, bevelEnabled: false });
+    wedgeGeo.rotateY(Math.PI / 2);
+    wedgeGeo.translate(-w * 0.45, 0, 0);
+    g.add(new THREE.Mesh(wedgeGeo, M.stick));
+    const front = new THREE.MeshStandardMaterial({ map: canvasTex(1024, Math.round((1024 * h) / w), draw), roughness: 0.85 });
+    const plate = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.04), [edgeMat, edgeMat, edgeMat, edgeMat, front, edgeMat]);
+    plate.rotation.x = -(Math.PI / 2 - slope);
+    plate.position.set(0, Hw / 2 + Math.cos(slope) * 0.021, -L / 2 + Math.sin(slope) * 0.021);
+    g.add(plate);
+    g.position.set(x, 0, z);
+    return shadowed(g);
+  }
+  const titleDraw = sub => (g, W, H) => {
+    g.fillStyle = '#fbf8f3';
+    g.fillRect(0, 0, W, H);
+    g.strokeStyle = '#c2255c';
+    g.lineWidth = 12;
+    g.strokeRect(20, 20, W - 40, H - 40);
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillStyle = '#241b25';
+    g.font = 'italic 700 120px Georgia, "Times New Roman", serif';
+    g.fillText('Salmonella', W / 2, H * 0.42);
+    g.fillStyle = '#6b5f6d';
+    g.font = '600 36px "Segoe UI", Arial, sans-serif';
+    g.fillText(sub, W / 2, H * 0.77);
+  };
+  const fichaDraw = (g, W, H) => {
+    g.fillStyle = '#ffffff';
+    g.fillRect(0, 0, W, H);
+    g.fillStyle = '#5a3e9e';
+    g.fillRect(0, 0, W, 132);
+    g.fillStyle = '#ffffff';
+    g.textBaseline = 'middle';
+    g.textAlign = 'left';
+    g.font = '700 62px "Segoe UI", Arial, sans-serif';
+    g.fillText('Ficha de inocuidad', 46, 68);
+    [['Cocción', '≥ 74 °C'], ['Refrigerar', '≤ 4 °C'], ['Crece entre', '5–46 °C'], ['Riesgo', 'huevo, pollo']].forEach(([k, v], i) => {
+      const y = 214 + i * 128;
+      g.textAlign = 'left';
+      g.fillStyle = '#6b5f6d';
+      g.font = '600 44px "Segoe UI", Arial, sans-serif';
+      g.fillText(k, 46, y);
+      g.textAlign = 'right';
+      g.fillStyle = '#241b25';
+      g.font = '700 54px "Segoe UI", Arial, sans-serif';
+      g.fillText(v, W - 46, y);
+      g.strokeStyle = '#e7e1ec';
+      g.lineWidth = 4;
+      g.beginPath();
+      g.moveTo(46, y + 60);
+      g.lineTo(W - 46, y + 60);
+      g.stroke();
+    });
+  };
+
+  // ---------- alfileres con etiqueta (cada uno aparece en ciertos pasos) ----------
+  const pins = [];
+  const pinStickGeo = new THREE.CylinderGeometry(0.009, 0.009, 1, 6);
+  const pinHeadGeo = new THREE.SphereGeometry(0.05, 16, 12);
+  function addPin(parent, text, anchor, dir, len, steps) {
+    const d = dir.clone().normalize();
+    const g = new THREE.Group();
+    const stick = new THREE.Mesh(pinStickGeo, M.pinStick);
+    stick.scale.set(1, len, 1);
+    stick.position.copy(anchor).addScaledVector(d, len / 2);
+    stick.quaternion.setFromUnitVectors(UP, d);
+    const head = new THREE.Mesh(pinHeadGeo, M.pinHead);
+    head.position.copy(anchor).addScaledVector(d, len);
+    g.add(stick, head);
+    shadowed(g, false);
+    parent.add(g);
+    const el = document.createElement('span');
+    el.className = 'tag';
+    el.textContent = text;
+    el.hidden = true;
+    tagLayer.appendChild(el);
+    pins.push({ el, g, head, parent, steps, anchor: anchor.clone(), wHead: V(0, 0, 0), wAnchor: V(0, 0, 0), wDir: V(0, 0, 0) });
+  }
+  // Misma posición: texto de material en su paso y nombre biológico en el paso final
+  function pinPair(parent, step, material, bio, anchor, dir, len) {
+    addPin(parent, material, anchor, dir, len, [step]);
+    addPin(parent, bio, anchor, dir, len, [7]);
+  }
+
+  // ---------- registro de pasos ----------
+  const steppers = [];
+  const at = (obj, from, to = 7) => { steppers.push({ obj, from, to }); return obj; };
+
+  // ---------- geometría de botella y plastilina ----------
+  function straightYs(y0, y1, n, extra) {
+    const ys = [];
+    for (let i = 0; i <= n; i++) ys.push(y0 + ((y1 - y0) * i) / n);
+    extra.forEach(e => { if (e > y0 && e < y1) ys.push(e); });
+    ys.sort((p, q) => p - q);
+    return ys.filter((y, i) => i === 0 || y - ys[i - 1] > 1e-6);
+  }
+  function capsuleProfile(r, h, a) {
+    const pts = [];
+    const n = 20;
+    for (let i = 0; i < n; i++) {
+      const t = -Math.PI / 2 + (i / n) * (Math.PI / 2);
+      pts.push(new THREE.Vector2(i === 0 ? 0 : r * Math.cos(t), -h + r * Math.sin(t)));
+    }
+    straightYs(-h, h, 44, [-a, a]).forEach(y => pts.push(new THREE.Vector2(r, y)));
+    for (let i = 1; i <= n; i++) {
+      const t = (i / n) * (Math.PI / 2);
+      pts.push(new THREE.Vector2(i === n ? 0 : r * Math.cos(t), h + r * Math.sin(t)));
+    }
+    return pts;
+  }
+  // Quita la "ventana": mitad de arriba (x local < 0 => y del mundo > 0) entre -a y a
+  function cutWindow(geo, a) {
+    const pos = geo.attributes.position;
+    const idx = geo.index.array;
+    const keep = [];
+    for (let i = 0; i < idx.length; i += 3) {
+      const ia = idx[i], ib = idx[i + 1], ic = idx[i + 2];
+      const cx = (pos.getX(ia) + pos.getX(ib) + pos.getX(ic)) / 3;
+      const cy = (pos.getY(ia) + pos.getY(ib) + pos.getY(ic)) / 3;
+      if (cx < 0 && Math.abs(cy) < a) continue;
+      keep.push(ia, ib, ic);
+    }
+    geo.setIndex(keep);
+    return geo;
+  }
+  function lumpNoise(x, y, z, s) {
+    return 0.5 * Math.sin(x * 5.1 + s) * Math.sin(y * 4.3 + s * 1.7) * Math.sin(z * 4.7 + s * 2.3)
+      + 0.3 * Math.sin(x * 9.7 + y * 3.1 + s) * Math.sin(z * 8.3 - y * 2.2)
+      + 0.2 * Math.sin(x * 15.0 - z * 7.0 + s * 3.1) * Math.sin(y * 13.0 + s);
+  }
+  function lumpify(geo, amp, seed) {
+    const pos = geo.attributes.position, nrm = geo.attributes.normal;
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+      const d = amp * lumpNoise(x, y, z, seed);
+      pos.setXYZ(i, x + nrm.getX(i) * d, y + nrm.getY(i) * d, z + nrm.getZ(i) * d);
+    }
+    pos.needsUpdate = true;
+    geo.computeVertexNormals();
+    return geo;
+  }
+
+  // ---------- escena ----------
+  const R = 0.8, Rb = 0.74, H = 1.25, A = 1.0, lift = 1.15, W = 7, D = 4.4;
+  const root = new THREE.Group();
+  scene.add(root);
+  root.add(base(W, D));
+  const b = new THREE.Group();
+  b.position.y = lift;
+  root.add(b);
+
+  // Cunas de cartón (siempre)
+  function cradle(x) {
+    const hw = 0.82, ytop = lift - 0.3, rr = R + 0.005;
+    const zi = Math.sqrt(rr * rr - (ytop - lift) ** 2);
+    const tR = Math.atan2(ytop - lift, zi), tL = Math.atan2(ytop - lift, -zi);
+    const pts = [new THREE.Vector2(-hw, 0), new THREE.Vector2(hw, 0), new THREE.Vector2(hw, ytop)];
+    for (let i = 0; i <= 32; i++) {
+      const t = tR + ((tL - tR) * i) / 32;
+      pts.push(new THREE.Vector2(rr * Math.cos(t), lift + rr * Math.sin(t)));
+    }
+    pts.push(new THREE.Vector2(-hw, ytop));
+    const geo = new THREE.ExtrudeGeometry(new THREE.Shape(pts), { depth: 0.08, bevelEnabled: false });
+    geo.rotateY(Math.PI / 2);
+    geo.translate(x - 0.04, 0, 0);
+    return shadowed(new THREE.Mesh(geo, M.card));
+  }
+  root.add(cradle(-1.0), cradle(1.0));
+
+  // Paso 1: botella de PET sin cuello y con ventana
+  {
+    const b0 = -H - 0.3;
+    const pts = [new THREE.Vector2(0, b0), new THREE.Vector2(Rb * 0.6, b0), new THREE.Vector2(Rb * 0.9, b0 + 0.04), new THREE.Vector2(Rb, b0 + 0.14)];
+    straightYs(b0 + 0.2, H + 0.04, 40, [-A, A]).forEach(y => pts.push(new THREE.Vector2(Rb, y)));
+    pts.push(new THREE.Vector2(Rb * 0.95, H + 0.15), new THREE.Vector2(Rb * 0.85, H + 0.24), new THREE.Vector2(Rb * 0.74, H + 0.3));
+    const bottle = new THREE.Mesh(cutWindow(new THREE.LatheGeometry(pts, 96, 0, Math.PI * 2), A), M.bottle);
+    bottle.rotation.z = -Math.PI / 2;
+    bottle.renderOrder = 2;
+    b.add(at(bottle, 1, 2));
+    const ringGeo = new THREE.TorusGeometry(Rb + 0.004, 0.01, 6, 72);
+    [-H - 0.02, -H + 0.12, H - 0.12].forEach(x => {
+      const ring = new THREE.Mesh(ringGeo, M.bottle);
+      ring.rotation.y = Math.PI / 2;
+      ring.position.x = x;
+      b.add(at(ring, 1, 2));
+    });
+  }
+
+  // Paso 2: puntas de papel periódico con masking, relleno y piso de cartón
+  {
+    const newsTex = canvasTex(512, 512, (g, Wc, Hc) => {
+      g.fillStyle = '#e8e1d0';
+      g.fillRect(0, 0, Wc, Hc);
+      const r = rng(9);
+      for (let y = 16; y < Hc; y += 13) {
+        let x = 10 + r() * 6;
+        while (x < Wc - 12) {
+          const w = Math.min(8 + r() * 34, Wc - 12 - x);
+          g.fillStyle = `rgba(70, 64, 58, ${0.22 + r() * 0.25})`;
+          g.fillRect(x, y, w, 5);
+          x += w + 6;
+        }
+      }
+      for (let i = 0; i < 7; i++) {
+        g.save();
+        g.translate(r() * Wc, r() * Hc);
+        g.rotate(r() * Math.PI);
+        g.fillStyle = 'rgba(226, 205, 150, 0.78)';
+        g.fillRect(-170, -24, 340, 48);
+        g.restore();
+      }
+    });
+    const paper = new THREE.MeshStandardMaterial({ map: newsTex, roughness: 0.92 });
+    const domeGeo = new THREE.SphereGeometry(R - 0.03, 40, 20, 0, Math.PI * 2, 0, Math.PI / 2);
+    [-1, 1].forEach(sgn => {
+      const dome = new THREE.Mesh(domeGeo, paper);
+      dome.rotation.z = -sgn * Math.PI / 2;
+      dome.position.x = sgn * H;
+      b.add(at(shadowed(dome), 2, 2));
+    });
+    const floor = new THREE.Mesh(new THREE.BoxGeometry(2 * A, 0.02, 2 * Rb), M.card);
+    floor.position.y = -0.01;
+    b.add(at(shadowed(floor), 2, 4));
+    const endGeo = new THREE.CircleGeometry(Rb, 40, 0, Math.PI);
+    [-1, 1].forEach(sgn => {
+      const end = new THREE.Mesh(endGeo, M.card);
+      end.rotation.y = sgn * -Math.PI / 2;
+      end.position.x = sgn * A;
+      b.add(at(shadowed(end), 2, 4));
+    });
+  }
+
+  // Paso 3: forro de plastilina rosa (con imperfecciones de hecho a mano)
+  {
+    let g = new THREE.LatheGeometry(capsuleProfile(R, H, A), 144, 0, Math.PI * 2);
+    g.deleteAttribute('uv');
+    g.deleteAttribute('normal');
+    g = mergeVertices(g);
+    cutWindow(g, A);
+    g.computeVertexNormals();
+    lumpify(g, 0.016, 1.3);
+    const skin = new THREE.Mesh(g, M.skin);
+    skin.rotation.z = -Math.PI / 2;
+    b.add(at(shadowed(skin), 3));
+  }
+
+  // Paso 4: tiras de plastilina en el borde de la ventana
+  const sr = 0.035, flat = 0.62;
+  const bands = [
+    { r: R - sr, m: M.om },
+    { r: R - 3 * sr, m: M.pg },
+    { r: R - 5 * sr, m: M.im },
+  ];
+  const innerR = R - 6 * sr;
+  bands.forEach(band => {
+    const rodGeo = new THREE.CapsuleGeometry(sr, 2 * A, 6, 14);
+    [-1, 1].forEach(sgn => {
+      const snake = new THREE.Mesh(rodGeo, band.m);
+      snake.rotation.z = Math.PI / 2;
+      snake.scale.x = flat;
+      snake.position.set(0, 0.012 + sr * flat, sgn * band.r);
+      b.add(at(shadowed(snake), 4));
+    });
+    const arcGeo = new THREE.TorusGeometry(band.r, sr, 10, 56, Math.PI);
+    [-1, 1].forEach(sgn => {
+      const arc = new THREE.Mesh(arcGeo, band.m);
+      arc.rotation.y = Math.PI / 2;
+      arc.scale.z = flat;
+      arc.position.x = sgn * (A - 0.012 - sr * flat);
+      b.add(at(shadowed(arc), 4));
+    });
+  });
+
+  // Paso 5: citoplasma crema, ADN, ribosomas y plásmidos
+  const plas = [V(0.82, 0.035, -0.42), V(-0.8, 0.035, 0.42), V(0.08, 0.035, -0.47)];
+  const dnaPts = [];
+  const rib = [];
+  {
+    const fg = new THREE.PlaneGeometry(2 * A, 2 * innerR, 34, 20);
+    const fp = fg.attributes.position;
+    for (let i = 0; i < fp.count; i++) fp.setZ(i, 0.004 * lumpNoise(fp.getX(i), fp.getY(i), 0, 2.1));
+    fg.computeVertexNormals();
+    const creamFloor = new THREE.Mesh(fg, M.cream);
+    creamFloor.rotation.x = -Math.PI / 2;
+    creamFloor.position.y = 0.012;
+    b.add(at(shadowed(creamFloor), 5));
+    const halfGeo = new THREE.CircleGeometry(innerR, 40, 0, Math.PI);
+    [-1, 1].forEach(sgn => {
+      const half = new THREE.Mesh(halfGeo, M.cream);
+      half.rotation.y = sgn * -Math.PI / 2;
+      half.position.x = sgn * (A - 0.01);
+      b.add(at(shadowed(half), 5));
+    });
+
+    for (let i = 0; i < 360; i++) {
+      const t = (i / 360) * Math.PI * 2;
+      dnaPts.push(V(
+        0.66 * Math.sin(3 * t + 0.3) * (0.85 + 0.15 * Math.cos(5 * t)),
+        0.045 + 0.022 * (1 + Math.sin(7 * t + 0.5)),
+        0.3 * Math.sin(5 * t + 1.1) + 0.05 * Math.sin(13 * t)
+      ));
+    }
+    b.add(at(shadowed(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(dnaPts, true), 900, 0.03, 8, true), M.dna)), 5));
+
+    const torusGeo = new THREE.TorusGeometry(0.07, 0.02, 10, 32);
+    plas.forEach(p => {
+      const m = new THREE.Mesh(torusGeo, M.plasmid);
+      m.position.copy(p);
+      m.rotation.x = -Math.PI / 2;
+      b.add(at(shadowed(m), 5));
+    });
+
+    const rr = rng(23);
+    for (let tries = 0; rib.length < 60 && tries < 4000; tries++) {
+      const p = V((rr() * 2 - 1) * (A - 0.08), 0.03, (rr() * 2 - 1) * (innerR - 0.06));
+      if (plas.some(q => q.distanceTo(p) < 0.15)) continue;
+      if (rib.some(q => q.distanceTo(p) < 0.09)) continue;
+      if (dnaPts.some(q => q.distanceTo(p) < 0.075)) continue;
+      rib.push(p);
+    }
+    const ribIM = new THREE.InstancedMesh(new THREE.SphereGeometry(0.034, 12, 8), M.ribo, rib.length);
+    rib.forEach((p, i) => ribIM.setMatrixAt(i, mm.makeTranslation(p.x, p.y, p.z)));
+    ribIM.instanceMatrix.needsUpdate = true;
+    ribIM.castShadow = true;
+    ribIM.frustumCulled = false;
+    b.add(at(ribIM, 5));
+  }
+
+  // Paso 6: limpiapipas (flagelos) y medios palillos (fimbrias)
+  const flags = [];
+  {
+    const r = rng(12);
+    const outsideWindow = p => !(p.y > -0.03 && Math.abs(p.x) < A + 0.06);
+    b.add(at(sticks(sampleCapsule(R, H, 190, r, (phi, p, n) => outsideWindow(p) && n.y > -0.6), r, 0.12, 0.19, 0.012, M.pick, 0.025), 6));
+    const reject = q => {
+      if (q.y > -0.12 && Math.abs(q.x) < A + 0.35 && q.z > -0.4) return true;
+      const wy = q.y + lift;
+      return Math.abs(q.x) > W / 2 + 0.4 || Math.abs(q.z) > D / 2 + 0.2 || (q.z > D / 2 - 1.15 && wy < 1.0);
+    };
+    const cands = sampleCapsule(R, H, 80, r, (phi, p, n) => outsideWindow(p) && n.y > -0.55, 0.55);
+    for (const c of cands) {
+      if (flags.length >= 9) break;
+      const pts = flagellumPoints(c.p, c.n, r, { length: 1.4 + r() * 0.6, amp: 0.1, waves: 3 + r() * 0.8, yMin: 0.08 - lift, lift: 0.1, liftNeg: 0.3 });
+      if (pts.some(reject)) continue;
+      b.add(at(tube(pts, 0.032, M.pipe), 6));
+      flags.push(pts);
+    }
+  }
+
+  // Paso 7: letrero y ficha de inocuidad
+  root.add(at(sign(2.3, 0.72, 0.62, titleDraw('Botella PET + plastilina · aumento ≈ 100 000×'), -W / 2 + 1.5, D / 2 - 0.22), 7));
+  root.add(at(sign(1.35, 0.95, 1.05, fichaDraw, W / 2 - 1.0, D / 2 - 0.22), 7));
+
+  // ---------- etiquetas ----------
+  addPin(b, 'Botella PET 1.5 L, sin cuello', V(-1.1, Rb * Math.cos(0.5), Rb * Math.sin(0.5)), V(-0.5, 1, 0.35), 0.8, [1]);
+  addPin(b, 'Ventana de ~16 cm', V(0.35, 0, Rb), V(0.3, 1, 0.55), 1.0, [1]);
+  addPin(root, 'Cuna de cartón', V(1.04, 0.55, 0.6), V(0.8, 0.3, 0.7), 0.6, [1]);
+  addPin(b, 'Papel periódico + masking', V(H, 0, 0).addScaledVector(V(0.55, 0.65, 0.52).normalize(), R - 0.03), V(0.7, 0.8, 0.35), 0.6, [2]);
+  addPin(b, 'Piso de cartón', V(0.15, 0, 0.25), V(0.15, 1, 0.45), 1.0, [2]);
+  addPin(b, 'Masking + plastilina rosa', V(-1.05, R, 0), V(-0.4, 1, 0.3), 0.8, [3]);
+
+  pinPair(b, 4, 'Rosa · membrana externa', 'Membrana externa (LPS)', V(-0.75, 0.035, bands[0].r), V(-1, 0.5, 0.35), 1.0);
+  pinPair(b, 4, 'Amarilla · peptidoglucano', 'Peptidoglucano', V(-0.3, 0.035, bands[1].r), V(-0.15, 1, 0.55), 1.7);
+  pinPair(b, 4, 'Azul · membrana interna', 'Membrana interna', V(0.25, 0.035, bands[2].r), V(0.15, -0.35, 1), 0.95);
+
+  pinPair(b, 5, 'Crema · citoplasma', 'Citoplasma', V(-A + 0.15, 0.012, -0.3), V(-1, 0.9, -0.1), 1.0);
+  const dBack = dnaPts.filter(q => Math.abs(q.x) < 0.3);
+  const dnaAnchor = (dBack.length ? dBack : dnaPts).reduce((a, q) => (q.z < a.z ? q : a));
+  pinPair(b, 5, 'Espagueti morado · ADN', 'ADN (nucleoide)', dnaAnchor, V(-0.1, 1, -0.35), 1.0);
+  const rbs = rib.filter(p => p.x > 0.3 && p.z > 0).sort((p, q) => q.x - p.x)[0] || V(0.6, 0.03, 0.3);
+  pinPair(b, 5, 'Bolitas negras · ribosomas', 'Ribosomas', rbs, V(1, 0.6, 0.2), 0.9);
+  pinPair(b, 5, 'Aro verde · plásmido', 'Plásmido', plas[0].clone().add(V(0.07, 0, 0)), V(0.8, 1, -0.3), 0.8);
+
+  const fl = flags.length ? flags.reduce((a, pts) => (pts[60].x > a[60].x ? pts : a), flags[0]) : null;
+  pinPair(b, 6, 'Limpiapipas · flagelos', 'Flagelo', fl ? fl[48] : V(H + R, 0, 0), V(0.4, 1, 0.2), 0.45);
+  const fimA = V(0, 0, 0), fimN = V(0, 0, 0);
+  capsulePoint(R, H, 0.75, Math.PI + 0.8, fimA, fimN);
+  pinPair(b, 6, 'Palillos · fimbrias', 'Fimbrias', fimA, V(0.5, 1, -0.3), 0.7);
+
+  root.updateMatrixWorld(true);
+  for (const p of pins) {
+    p.head.getWorldPosition(p.wHead);
+    p.wAnchor.copy(p.anchor).applyMatrix4(p.parent.matrixWorld);
+    p.wDir.subVectors(p.wHead, p.wAnchor).normalize();
+  }
+
+  // ---------- pasos ----------
+  const STEPS = ['Corta la botella', 'Redondea y arma el piso', 'Forra con plastilina rosa', 'Pon las capas en el borde', 'Rellena el interior', 'Flagelos y fimbrias', 'Monta y etiqueta'];
+  let step = 7;
+  let tagsOn = true;
+  function applyPins() {
+    for (const p of pins) {
+      const on = tagsOn && p.steps.includes(step);
+      p.el.hidden = !on;
+      p.g.visible = on;
+    }
+  }
+  function setStep(n) {
+    step = Math.max(1, Math.min(7, n));
+    for (const s of steppers) s.obj.visible = step >= s.from && step <= s.to;
+    applyPins();
+    stepNum.textContent = `Paso ${step} de 7`;
+    stepName.textContent = STEPS[step - 1];
+    btnPrev.disabled = step === 1;
+    btnNext.disabled = step === 7;
+    stepButtons.forEach(bt => {
+      const cur = Number(bt.dataset.step) === step;
+      bt.classList.toggle('is-current', cur);
+      if (cur) bt.setAttribute('aria-current', 'step');
+      else bt.removeAttribute('aria-current');
+    });
+    canvas.setAttribute('aria-label', `Modelo 3D de la maqueta con botella, paso ${step} de 7: ${STEPS[step - 1]}`);
+  }
+  btnPrev.addEventListener('click', () => setStep(step - 1));
+  btnNext.addEventListener('click', () => setStep(step + 1));
+  stepButtons.forEach(bt => bt.addEventListener('click', () => {
+    setStep(Number(bt.dataset.step));
+    if (window.matchMedia('(max-width: 900px)').matches) stageEl.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+  }));
+
+  btnTags.addEventListener('click', () => {
+    tagsOn = !tagsOn;
+    btnTags.setAttribute('aria-pressed', String(tagsOn));
+    applyPins();
+  });
+  btnSpin.addEventListener('click', () => {
+    controls.autoRotate = !controls.autoRotate;
+    btnSpin.setAttribute('aria-pressed', String(controls.autoRotate));
+  });
+
+  // ---------- cámara ----------
+  const view = { pos: V(1.4, 5.6, 6.4), target: V(0, 1.0, 0.1), halfW: 4.4 };
+  let anim = null;
+  let userMoved = false;
+  let sizeGen = 0;
+  function viewPose() {
+    const w = stageEl.clientWidth || 1, h = stageEl.clientHeight || 1;
+    const dir = view.pos.clone().sub(view.target);
+    const hw = w / h < 1 ? view.halfW * 0.8 : view.halfW;
+    const need = hw / (Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * (w / h));
+    const k = Math.max(1, need / dir.length());
+    return { pos: view.target.clone().addScaledVector(dir, k), target: view.target.clone() };
+  }
+  function frame(instant) {
+    userMoved = false;
+    const pose = viewPose();
+    if (instant) {
+      camera.position.copy(pose.pos);
+      controls.target.copy(pose.target);
+      controls.update();
+      anim = null;
+      return;
+    }
+    anim = { t: 0, p0: camera.position.clone(), t0: controls.target.clone(), p1: pose.pos, t1: pose.target };
+  }
+  btnReset.addEventListener('click', () => frame(reduceMotion));
+  controls.addEventListener('start', () => { anim = null; userMoved = true; });
+
+  function resize() {
+    const w = stageEl.clientWidth, h = stageEl.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    sizeGen++;
+    if (!userMoved && !anim) frame(true);
+  }
+  new ResizeObserver(resize).observe(stageEl);
+  resize();
+
+  const tmpH = V(0, 0, 0), tmpA = V(0, 0, 0), toCam = V(0, 0, 0);
+  // Etiquetas: se colocan junto a la cabeza del alfiler y se separan si chocan
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { sizeGen++; });
+  const overlaps = (a, b) => a.left < b.left + b.w + 2 && b.left < a.left + a.w + 2 && a.top < b.top + b.h + 2 && b.top < a.top + a.h + 2;
+  function placeTags() {
+    const w = stageEl.clientWidth, h = stageEl.clientHeight;
+    const narrow = w < 560;
+    const boxes = [];
+    for (const p of pins) {
+      if (p.el.hidden) continue;
+      tmpH.copy(p.wHead).project(camera);
+      if (tmpH.z > 1) { p.el.style.visibility = 'hidden'; continue; }
+      p.el.style.visibility = '';
+      tmpA.copy(p.wAnchor).project(camera);
+      const hx = (tmpH.x * 0.5 + 0.5) * w, hy = (-tmpH.y * 0.5 + 0.5) * h;
+      const dx = hx - (tmpA.x * 0.5 + 0.5) * w, dy = hy - (-tmpA.y * 0.5 + 0.5) * h;
+      if (p.gen !== sizeGen || !p.tw) { p.tw = p.el.offsetWidth; p.th = p.el.offsetHeight; p.gen = sizeGen; }
+      let left, top;
+      if (Math.abs(dx) > Math.abs(dy) * 1.4) {
+        top = hy - p.th / 2;
+        left = dx > 0 ? hx + 9 : hx - 9 - p.tw;
+      } else if (dy > 0) {
+        left = hx - p.tw / 2;
+        top = hy + 9;
+      } else {
+        left = hx - p.tw / 2;
+        top = hy - 9 - p.th;
+      }
+      toCam.copy(camera.position).sub(p.wHead).normalize();
+      const back = p.wDir.dot(toCam) < -0.2;
+      p.el.classList.toggle('is-back', back);
+      const z = Math.round((1 - tmpH.z) * 10000);
+      p.el.style.zIndex = String(z);
+      boxes.push({ p, left, top, top0: top, w: p.tw, h: p.th, back, z });
+    }
+    boxes.sort((a, b) => (a.back - b.back) || (b.z - a.z));
+    const clampBox = bx => {
+      bx.left = Math.min(Math.max(bx.left, 4), w - bx.w - 4);
+      bx.top = Math.min(Math.max(bx.top, 4), h - bx.h - 4);
+    };
+    const placed = [];
+    for (const bx of boxes) {
+      clampBox(bx);
+      if (!(narrow && bx.back)) {
+        for (let tries = 0; tries < 12; tries++) {
+          const hit = placed.find(q => overlaps(q, bx));
+          if (!hit) break;
+          const up = hit.top - bx.h - 3, down = hit.top + hit.h + 3;
+          bx.top = up >= 4 && Math.abs(up - bx.top0) <= Math.abs(down - bx.top0) ? up : down;
+          clampBox(bx);
+        }
+        placed.push(bx);
+      }
+      bx.p.el.style.transform = `translate(${bx.left.toFixed(1)}px, ${bx.top.toFixed(1)}px)`;
+    }
+  }
+
+  const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  const clock = new THREE.Clock();
+  let firstFrame = true;
+  function tick() {
+    const dt = Math.min(clock.getDelta(), 0.05);
+    if (anim) {
+      anim.t = Math.min(1, anim.t + dt / 0.75);
+      const e = ease(anim.t);
+      camera.position.lerpVectors(anim.p0, anim.p1, e);
+      controls.target.lerpVectors(anim.t0, anim.t1, e);
+      if (anim.t >= 1) anim = null;
+    }
+    controls.update();
+    renderer.render(scene, camera);
+    placeTags();
+    if (firstFrame) {
+      firstFrame = false;
+      loadingEl.hidden = true;
+    }
+  }
+
+  const m = location.hash.match(/^#paso-([1-7])$/);
+  setStep(m ? Number(m[1]) : 7);
+  frame(true);
+  renderer.setAnimationLoop(tick);
+}
+</script>
+</body>
+</html>

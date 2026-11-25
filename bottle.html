@@ -291,9 +291,9 @@ h1 i { font-style: italic; color: var(--safranin); }
         <button type="button" class="tool" id="btn-reset">Centrar</button>
       </div>
       <div class="stepbar">
-        <button type="button" class="tool" id="step-prev" aria-label="Paso anterior">‹</button>
-        <p class="stepbar-label" aria-live="polite"><span id="step-num">Paso 7 de 7</span><b id="step-name">Monta y etiqueta</b></p>
-        <button type="button" class="tool" id="step-next" aria-label="Paso siguiente" disabled>›</button>
+        <button type="button" class="tool" id="step-prev" aria-label="Paso anterior" disabled>‹</button>
+        <p class="stepbar-label" aria-live="polite"><span id="step-num">Paso 1 de 7</span><b id="step-name">Corta la botella</b></p>
+        <button type="button" class="tool" id="step-next" aria-label="Paso siguiente">›</button>
       </div>
       <div class="stage-loading" id="stage-loading">Cargando modelo 3D…</div>
       <div class="stage-msg" id="stage-msg" hidden>
@@ -311,13 +311,13 @@ h1 i { font-style: italic; color: var(--safranin); }
       </dl>
       <h3>Paso a paso</h3>
       <ol class="steps">
-        <li><button type="button" class="step" data-step="1"><span class="stepn">1</span><span class="pt"><b>Corta la botella</b><span>Usa una botella lisa de 1.5 L sin etiqueta. Quítale el cuello y corta una ventana de unos 16 cm en la mitad de arriba: marca con plumón, empieza con cúter y termina con tijeras. Haz dos cunas de cartón para que no ruede.</span></span></button></li>
+        <li><button type="button" class="step is-current" data-step="1" aria-current="step"><span class="stepn">1</span><span class="pt"><b>Corta la botella</b><span>Usa una botella lisa de 1.5 L sin etiqueta. Quítale el cuello y corta una ventana de unos 16 cm en la mitad de arriba: marca con plumón, empieza con cúter y termina con tijeras. Haz dos cunas de cartón para que no ruede.</span></span></button></li>
         <li><button type="button" class="step" data-step="2"><span class="stepn">2</span><span class="pt"><b>Redondea y arma el piso</b><span>Rellena la parte de abajo de la ventana con papel arrugado y tápala con un rectángulo de cartón al ras del corte. Forma las puntas redondas con bolas de papel periódico y cinta masking.</span></span></button></li>
         <li><button type="button" class="step" data-step="3"><span class="stepn">3</span><span class="pt"><b>Forra con plastilina rosa</b><span>Cubre todo con cinta masking para que la plastilina se pegue. Luego extiende una capa de 2–3 mm de plastilina rosa por fuera y en las puntas.</span></span></button></li>
         <li><button type="button" class="step" data-step="4"><span class="stepn">4</span><span class="pt"><b>Pon las capas en el borde</b><span>Rueda tiras delgadas de plastilina y pégalas en todo el borde de la ventana: rosa afuera, luego amarilla y luego azul.</span></span></button></li>
         <li><button type="button" class="step" data-step="5"><span class="stepn">5</span><span class="pt"><b>Rellena el interior</b><span>Cubre el piso con plastilina crema. Encima pon espaguetis morados enredados (ADN), bolitas negras (ribosomas) y aros verdes (plásmidos).</span></span></button></li>
         <li><button type="button" class="step" data-step="6"><span class="stepn">6</span><span class="pt"><b>Flagelos y fimbrias</b><span>Enrolla limpiapipas en un lápiz, estíralos un poco y mételos en hoyitos hechos con la punta de las tijeras. Clava medios palillos por toda la superficie.</span></span></button></li>
-        <li><button type="button" class="step is-current" data-step="7" aria-current="step"><span class="stepn">7</span><span class="pt"><b>Monta y etiqueta</b><span>Pega las cunas a la base y apoya la bacteria. Agrega el letrero, la ficha de inocuidad y banderitas con alfiler.</span></span></button></li>
+        <li><button type="button" class="step" data-step="7"><span class="stepn">7</span><span class="pt"><b>Monta y etiqueta</b><span>Pega las cunas a la base y apoya la bacteria. Agrega el letrero, la ficha de inocuidad y banderitas con alfiler.</span></span></button></li>
       </ol>
       <h3>Lista de compras</h3>
       <ul class="mats">
@@ -990,7 +990,7 @@ function start() {
 
   // ---------- pasos ----------
   const STEPS = ['Corta la botella', 'Redondea y arma el piso', 'Forra con plastilina rosa', 'Pon las capas en el borde', 'Rellena el interior', 'Flagelos y fimbrias', 'Monta y etiqueta'];
-  let step = 7;
+  let step = 1;
   let tagsOn = true;
   function applyPins() {
     for (const p of pins) {
@@ -1151,7 +1151,7 @@ function start() {
   }
 
   const m = location.hash.match(/^#paso-([1-7])$/);
-  setStep(m ? Number(m[1]) : 7);
+  setStep(m ? Number(m[1]) : 1);
   frame(true);
   renderer.setAnimationLoop(tick);
 }

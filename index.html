@@ -317,15 +317,14 @@ h1 i { font-style: italic; color: var(--safranin); }
 <body>
 <div class="page">
   <header class="head">
-    <p class="eyebrow">Proyecto de microbiología · 3 propuestas</p>
+    <p class="eyebrow">Proyecto de microbiología · 2 propuestas</p>
     <h1>Maqueta de <i>Salmonella</i></h1>
     <p class="lede">Míralas en 3D antes de armar la física. Gira el modelo, acércate y pasa el cursor (o toca) cada parte de la lista para ubicarla.</p>
   </header>
 
   <div class="tabs" role="tablist" aria-label="Propuestas">
-    <button type="button" class="tab" role="tab" id="tab-completa" aria-controls="panel-completa" aria-selected="true" data-view="completa"><span class="tab-n">1</span>Completa</button>
-    <button type="button" class="tab" role="tab" id="tab-corte" aria-controls="panel-corte" aria-selected="false" data-view="corte"><span class="tab-n">2</span>Con corte<span class="tab-badge">Recomendada</span></button>
-    <button type="button" class="tab" role="tab" id="tab-infeccion" aria-controls="panel-infeccion" aria-selected="false" data-view="infeccion"><span class="tab-n">3</span>Infección</button>
+    <button type="button" class="tab" role="tab" id="tab-corte" aria-controls="panel-corte" aria-selected="true" data-view="corte"><span class="tab-n">1</span>Con corte<span class="tab-badge">Recomendada</span></button>
+    <button type="button" class="tab" role="tab" id="tab-infeccion" aria-controls="panel-infeccion" aria-selected="false" data-view="infeccion"><span class="tab-n">2</span>Infección</button>
   </div>
 
   <div class="bench">
@@ -345,34 +344,9 @@ h1 i { font-style: italic; color: var(--safranin); }
     </section>
 
     <aside class="card">
-      <article class="prop" id="panel-completa" data-view="completa" role="tabpanel" aria-labelledby="tab-completa">
-        <h2>Bacteria completa</h2>
-        <p class="prop-desc">La bacteria entera, unas 100 000 veces más grande que la real. Es la más rápida de armar y se entiende de un vistazo.</p>
-        <dl class="specs">
-          <div><dt>Dificultad</dt><dd><span class="meter" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span>Fácil</dd></div>
-          <div><dt>Tiempo</dt><dd>1 día</dd></div>
-          <div><dt>Costo</dt><dd>Bajo</dd></div>
-        </dl>
-        <h3>Qué muestra</h3>
-        <ul class="parts">
-          <li tabindex="0" data-pins="0"><span class="sw" style="--sw: #e0607e"></span><span class="pt"><b>Cuerpo de bacilo</b><span>Forma de bastón; la real mide 2–5 µm. Va rosa porque en la tinción de Gram las bacterias Gram negativas se ven rosas.</span></span></li>
-          <li tabindex="0" data-pins="1"><span class="sw" style="--sw: #e0607e"></span><span class="pt"><b>Membrana externa</b><span>La capa de afuera. Lleva LPS, que es el antígeno O.</span></span></li>
-          <li tabindex="0" data-pins="2"><span class="sw" style="--sw: #7a3363"></span><span class="pt"><b>Flagelos</b><span>Salen de todo el cuerpo (perítricos) y le sirven para nadar. Son el antígeno H.</span></span></li>
-          <li tabindex="0" data-pins="3"><span class="sw" style="--sw: #f2e1c6"></span><span class="pt"><b>Fimbrias</b><span>Pelitos cortos con los que se pega a las células del intestino.</span></span></li>
-        </ul>
-        <h3>Materiales</h3>
-        <ul class="mats">
-          <li><b>Cuerpo:</b> cilindro de unicel con media esfera en cada punta, pintado de rosa.</li>
-          <li><b>Flagelos:</b> limpiapipas o alambre forrado, enrollado en un lápiz para que quede en espiral.</li>
-          <li><b>Fimbrias:</b> palillos cortados o alfileres.</li>
-          <li><b>Base:</b> MDF o cartón grueso, con 2 palitos de brocheta como soporte.</li>
-          <li><b>Etiquetas:</b> banderitas de papel con alfiler.</li>
-        </ul>
-      </article>
-
-      <article class="prop" id="panel-corte" data-view="corte" role="tabpanel" aria-labelledby="tab-corte" hidden>
+      <article class="prop" id="panel-corte" data-view="corte" role="tabpanel" aria-labelledby="tab-corte">
         <h2>Bacteria con corte</h2>
-        <p class="prop-desc">Por fuera se ve completa, pero le falta una rebanada que deja ver sus capas y su interior. Es la que mejor equilibra trabajo y contenido.</p>
+        <p class="prop-desc">Por fuera se ve completa, unas 100 000 veces más grande que la real (mide 2–5 µm), pero le falta una rebanada que deja ver sus capas y su interior. Es la que mejor equilibra trabajo y contenido.</p>
         <dl class="specs">
           <div><dt>Dificultad</dt><dd><span class="meter" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span>Media</dd></div>
           <div><dt>Tiempo</dt><dd>2 días</dd></div>
@@ -380,14 +354,14 @@ h1 i { font-style: italic; color: var(--safranin); }
         </dl>
         <h3>Qué muestra</h3>
         <ul class="parts">
-          <li tabindex="0" data-pins="0"><span class="sw" style="--sw: #cc4b6d"></span><span class="pt"><b>Membrana externa</b><span>Capa de afuera, con LPS (antígeno O).</span></span></li>
+          <li tabindex="0" data-pins="0"><span class="sw" style="--sw: #cc4b6d"></span><span class="pt"><b>Membrana externa</b><span>Capa de afuera, con LPS (antígeno O). Va rosa porque en la tinción de Gram las bacterias Gram negativas se ven rosas.</span></span></li>
           <li tabindex="0" data-pins="1"><span class="sw" style="--sw: #f0bf45"></span><span class="pt"><b>Peptidoglucano</b><span>Pared delgada entre las dos membranas, típica de las Gram negativas.</span></span></li>
           <li tabindex="0" data-pins="2"><span class="sw" style="--sw: #4d84c4"></span><span class="pt"><b>Membrana interna</b><span>Controla lo que entra y sale de la célula.</span></span></li>
           <li tabindex="0" data-pins="3"><span class="sw" style="--sw: #f6e9d8"></span><span class="pt"><b>Citoplasma</b><span>El relleno donde está todo lo demás.</span></span></li>
           <li tabindex="0" data-pins="4"><span class="sw" style="--sw: #6a43ae"></span><span class="pt"><b>ADN (nucleoide)</b><span>Un cromosoma circular suelto. Las bacterias no tienen núcleo.</span></span></li>
           <li tabindex="0" data-pins="5"><span class="sw" style="--sw: #3a3545"></span><span class="pt"><b>Ribosomas</b><span>Fabrican las proteínas (tipo 70S).</span></span></li>
           <li tabindex="0" data-pins="6"><span class="sw" style="--sw: #2e9c6c"></span><span class="pt"><b>Plásmidos</b><span>Anillos de ADN extra. Algunos traen genes de virulencia o de resistencia a antibióticos.</span></span></li>
-          <li tabindex="0" data-pins="7 8"><span class="sw" style="--sw: #7a3363"></span><span class="pt"><b>Flagelos y fimbrias</b><span>Igual que en la propuesta 1, en la parte sin cortar.</span></span></li>
+          <li tabindex="0" data-pins="7 8"><span class="sw" style="--sw: #7a3363"></span><span class="pt"><b>Flagelos y fimbrias</b><span>En la parte sin cortar. Los flagelos salen de todo el cuerpo y le sirven para nadar (antígeno H). Las fimbrias son pelitos cortos para pegarse al intestino.</span></span></li>
         </ul>
         <h3>Materiales</h3>
         <ul class="mats">
@@ -397,6 +371,10 @@ h1 i { font-style: italic; color: var(--safranin); }
           <li><b>ADN:</b> estambre morado enredado.</li>
           <li><b>Ribosomas:</b> chaquira o bolitas de plastilina.</li>
           <li><b>Plásmidos:</b> ligas pequeñas o aros de limpiapipas.</li>
+          <li><b>Flagelos:</b> limpiapipas o alambre forrado, enrollado en un lápiz para que quede en espiral.</li>
+          <li><b>Fimbrias:</b> palillos cortados o alfileres.</li>
+          <li><b>Base:</b> MDF o cartón grueso, con 2 palitos de brocheta como soporte.</li>
+          <li><b>Etiquetas:</b> banderitas de papel con alfiler.</li>
         </ul>
         <p class="prop-note">Las capas van más gruesas que en la realidad para que se distingan. Vale la pena decirlo al exponer.</p>
       </article>
@@ -435,7 +413,7 @@ h1 i { font-style: italic; color: var(--safranin); }
   <section class="ficha" aria-labelledby="ficha-t">
     <div class="ficha-head">
       <h2 id="ficha-t">Ficha de inocuidad</h2>
-      <p>Va en la base de cualquiera de las tres. Es lo que conecta la maqueta con tu carrera.</p>
+      <p>Va en la base de cualquiera de las dos. Es lo que conecta la maqueta con tu carrera.</p>
     </div>
     <dl class="facts">
       <div><dt>Alimentos de riesgo</dt><dd>Huevo crudo o poco cocido, pollo, cerdo, leche sin pasteurizar, frutas y verduras contaminadas.</dd></div>
@@ -450,11 +428,11 @@ h1 i { font-style: italic; color: var(--safranin); }
 
 <script>
 (function () {
-  var views = ['completa', 'corte', 'infeccion'];
+  var views = ['corte', 'infeccion'];
   var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
   var panels = Array.prototype.slice.call(document.querySelectorAll('.prop'));
   function show(name, fromUser) {
-    if (views.indexOf(name) === -1) name = 'completa';
+    if (views.indexOf(name) === -1) name = 'corte';
     document.documentElement.setAttribute('data-view', name);
     tabs.forEach(function (t) {
       var on = t.getAttribute('data-view') === name;
@@ -847,45 +825,7 @@ function start() {
     list.push({ el, g, head, parent, anchor: anchor.clone(), wHead: V(0, 0, 0), wAnchor: V(0, 0, 0), wDir: V(0, 0, 0) });
   }
 
-  // ---------- Propuesta 1: bacteria completa ----------
-  function buildCompleta() {
-    const root = new THREE.Group();
-    const pins = [];
-    const W = 7, D = 4.4;
-    root.add(base(W, D));
-    signs(root, W, D, 'Bacilo Gram negativo · aumento ≈ 100 000×');
-    const R = 0.62, H = 1.15, lift = 1.8, zOff = -0.35;
-    const b = new THREE.Group();
-    b.position.set(0, lift, zOff);
-    root.add(b);
-    const body = new THREE.Mesh(new THREE.CapsuleGeometry(R, 2 * H, 24, 64), M.body);
-    body.rotation.z = -Math.PI / 2;
-    b.add(shadowed(body));
-    const r = rng(11);
-    b.add(fimbriae(sampleCapsule(R, H, 260, r, (phi, p, n) => n.y > -0.8), r, 0.13, 0.22, 0.013));
-    const reject = q => {
-      const wx = q.x, wy = q.y + lift, wz = q.z + zOff;
-      return Math.abs(wx) > W / 2 + 0.45 || Math.abs(wz) > D / 2 + 0.25 || (wz > D / 2 - 1.1 && wy < 1.15);
-    };
-    const flags = addFlagella(b, {
-      R, H, count: 11, r, len: [1.5, 2.2], amp: 0.11, waves: [3, 4.2], radius: 0.03, minDist: 0.5,
-      yMin: 0.08 - lift, lift: 0.12, liftNeg: 0.55, accept: (phi, p, n) => n.y > -0.6, reject,
-    });
-    for (const x of [-0.85, 0.85]) root.add(rod(x, zOff, lift - R + 0.12));
-    const P = (s, phi) => { const p = V(0, 0, 0), n = V(0, 0, 0); capsulePoint(R, H, s, phi, p, n); return p; };
-    addPin(b, pins, 'Bacilo · 2–5 µm', P(0.93, -0.5), V(0.9, 0.75, 0.3), 0.7);
-    addPin(b, pins, 'Membrana externa (LPS)', P(0.36, -0.3), V(-0.5, 0.95, 0.6), 0.95);
-    const fl = flags.length ? flags.reduce((a, pts) => (pts[40].y > a[40].y ? pts : a), flags[0]) : null;
-    addPin(b, pins, 'Flagelo', fl ? fl[44] : P(0.5, Math.PI * 1.5), V(-0.2, 1, 0.25), 0.5);
-    addPin(b, pins, 'Fimbrias', P(0.6, Math.PI + 0.75), V(0.3, 1, -0.1), 0.85);
-    return {
-      root, pins,
-      view: { pos: V(0.8, 3.3, 8.7), target: V(0, 1.7, 0), halfW: 4.6 },
-      alt: 'Modelo 3D: Salmonella completa sobre una base de madera, con flagelos, fimbrias y etiquetas en alfileres.',
-    };
-  }
-
-  // ---------- Propuesta 2: bacteria con corte ----------
+  // ---------- Propuesta 1: bacteria con corte ----------
   function profile(R, H, n = 20) {
     const pts = [];
     for (let i = 0; i <= n; i++) {
@@ -1187,7 +1127,7 @@ function start() {
   }
 
   // ---------- escenas ----------
-  const sets = { completa: buildCompleta(), corte: buildCorte(), infeccion: buildInfeccion() };
+  const sets = { corte: buildCorte(), infeccion: buildInfeccion() };
   for (const key of Object.keys(sets)) {
     const s = sets[key];
     s.root.visible = false;
@@ -1224,7 +1164,7 @@ function start() {
     anim = { t: 0, p0: camera.position.clone(), t0: controls.target.clone(), p1: pose.pos, t1: pose.target };
   }
   function setView(name, instant) {
-    const next = sets[name] || sets.completa;
+    const next = sets[name] || sets.corte;
     if (next === current) return;
     if (current) {
       current.root.visible = false;
@@ -1328,7 +1268,7 @@ function start() {
     }
   }
 
-  setView(document.documentElement.getAttribute('data-view') || 'completa', true);
+  setView(document.documentElement.getAttribute('data-view') || 'corte', true);
   document.addEventListener('maqueta:view', e => setView(e.detail, false));
   renderer.setAnimationLoop(tick);
 }

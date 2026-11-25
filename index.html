@@ -1,0 +1,1337 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="only light">
+<title>Maqueta de Salmonella</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=Inter:wght@400;500;600&family=Schibsted+Grotesk:ital,wght@0,700;0,800;1,800&display=swap">
+<style>
+/* Layout: banco de trabajo (escenario 3D) a la izquierda + ficha de la propuesta a la derecha; franja de inocuidad abajo.
+   Color: paleta de la tinción de Gram (safranina = Gram negativa; cristal violeta como acento secundario). */
+:root {
+  --ground: #f3f1f6;
+  --paper: #ffffff;
+  --ink: #1d1a23;
+  --ink-2: #5f5969;
+  --rule: #e2dee8;
+  --safranin: #c2255c;
+  --safranin-ink: #ffffff;
+  --safranin-soft: #fbe5ee;
+  --violet: #5a3e9e;
+  --violet-ink: #ffffff;
+  --violet-soft: #ece7f8;
+  --stage-hi: #ffffff;
+  --stage-lo: #e4e0eb;
+  --tag-bg: rgba(255, 255, 255, 0.94);
+  --tag-rule: rgba(29, 26, 35, 0.14);
+  --shadow: rgba(36, 20, 48, 0.14);
+  --focus: #5a3e9e;
+  --font-display: "Schibsted Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: only light;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+.page {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  gap: 20px;
+}
+
+/* Encabezado */
+.head { display: grid; gap: 8px; }
+.eyebrow {
+  margin: 0;
+  font: 500 11.5px/1.2 var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--safranin);
+}
+h1 {
+  margin: 0;
+  font: 800 clamp(1.9rem, 1.3rem + 2.2vw, 2.9rem)/1.05 var(--font-display);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+h1 i { font-style: italic; color: var(--safranin); }
+.lede { margin: 0; color: var(--ink-2); max-width: 64ch; font-size: 1.02rem; }
+
+/* Pestañas */
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px 9px 9px;
+  border-radius: 12px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+  font: 600 14px/1 var(--font-body);
+  cursor: pointer;
+}
+.tab:hover { border-color: var(--safranin); }
+.tab-n {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--ground);
+  font: 500 13px/1 var(--font-mono);
+}
+.tab[aria-selected="true"] { border-color: var(--safranin); box-shadow: inset 0 0 0 1px var(--safranin); }
+.tab[aria-selected="true"] .tab-n { background: var(--safranin); color: var(--safranin-ink); }
+.tab-badge {
+  font: 500 10px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--violet);
+  background: var(--violet-soft);
+  padding: 5px 7px;
+  border-radius: 6px;
+}
+.tab:focus-visible, .tool:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* Banco: escenario 3D + ficha */
+.bench {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.stage {
+  position: relative;
+  height: clamp(380px, 64vh, 640px);
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  background: radial-gradient(ellipse at 50% 32%, var(--stage-hi), var(--stage-lo) 78%);
+}
+@media (min-width: 901px) {
+  .stage { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 14px); }
+}
+.stage canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.stage canvas:active { cursor: grabbing; }
+.tags { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font: 600 12px/1.2 var(--font-body);
+  color: var(--ink);
+  background: var(--tag-bg);
+  border: 1px solid var(--tag-rule);
+  border-radius: 6px;
+  padding: 4px 8px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px var(--shadow);
+  transition: opacity 0.2s, background-color 0.2s, color 0.2s;
+  will-change: transform;
+}
+.tag.is-back { opacity: 0.3; }
+.tag.is-hot { background: var(--safranin); color: var(--safranin-ink); border-color: transparent; opacity: 1; z-index: 99999 !important; }
+.stage-tools { position: absolute; left: 12px; top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+.tool {
+  font: 600 12px/1 var(--font-body);
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+}
+.tool[aria-pressed="true"] { background: var(--violet); color: var(--violet-ink); border-color: transparent; }
+.stage-hint {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  max-width: calc(100% - 24px);
+  margin: 0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--tag-bg);
+  font: 500 11px/1.3 var(--font-mono);
+  color: var(--ink-2);
+  pointer-events: none;
+}
+.stage-loading, .stage-msg {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  text-align: center;
+  color: var(--ink-2);
+  font: 500 13px/1.5 var(--font-mono);
+}
+.stage-msg { background: var(--paper); font-family: var(--font-body); font-size: 14px; }
+.stage-msg p { max-width: 42ch; margin: 0; }
+.stage-msg strong { color: var(--ink); }
+
+.card {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 18px;
+  padding: 22px 20px 24px;
+  min-width: 0;
+}
+.prop { display: grid; gap: 14px; }
+.prop h2 { margin: 0; font: 800 1.45rem/1.15 var(--font-display); letter-spacing: -0.01em; text-wrap: balance; }
+.prop-desc { margin: 0; color: var(--ink-2); }
+.specs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.specs div { background: var(--ground); border-radius: 10px; padding: 10px 12px; min-width: 0; }
+.specs dt {
+  margin-bottom: 6px;
+  font: 500 10.5px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.specs dd { margin: 0; font-weight: 600; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.meter { display: inline-flex; gap: 3px; }
+.meter i { width: 7px; height: 7px; border-radius: 50%; background: var(--rule); }
+.meter[data-level="1"] i:nth-child(1),
+.meter[data-level="2"] i:nth-child(-n + 2),
+.meter[data-level="3"] i { background: var(--safranin); }
+.prop h3 {
+  margin: 6px 0 0;
+  font: 500 11px/1 var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.parts { list-style: none; margin: 0 -8px; padding: 0; display: grid; gap: 2px; }
+.parts li {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 8px;
+  border-radius: 10px;
+  outline: none;
+}
+.parts li:hover, .parts li:focus-visible { background: var(--safranin-soft); }
+.parts li:focus-visible { box-shadow: 0 0 0 2px var(--focus); }
+.sw {
+  width: 14px;
+  height: 14px;
+  margin: 4px 4px 0;
+  border-radius: 50%;
+  background: var(--sw);
+  box-shadow: inset 0 0 0 1px var(--tag-rule);
+}
+.stepn {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--safranin);
+  color: var(--safranin-ink);
+  font: 500 12px/1 var(--font-mono);
+}
+.pt { display: grid; gap: 2px; min-width: 0; }
+.pt b { font-weight: 600; }
+.pt span { color: var(--ink-2); font-size: 13.5px; line-height: 1.45; }
+.mats { margin: 0; padding-left: 18px; display: grid; gap: 5px; }
+.mats b { font-weight: 600; }
+.prop-note { margin: 0; font-size: 13px; color: var(--ink-2); border-top: 1px solid var(--rule); padding-top: 12px; }
+
+/* Ficha de inocuidad */
+.ficha {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 18px;
+  padding: 22px 20px;
+  display: grid;
+  gap: 16px;
+}
+.ficha-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px; }
+.ficha h2 { margin: 0; font: 800 1.3rem/1.2 var(--font-display); }
+.ficha-head p { margin: 0; color: var(--ink-2); max-width: 62ch; }
+.facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.facts div { background: var(--paper); padding: 14px 16px; min-width: 0; }
+.facts dt {
+  margin-bottom: 8px;
+  font: 500 10.5px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--violet);
+}
+.facts dd { margin: 0; }
+.num { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+
+@media (max-width: 900px) {
+  .bench { grid-template-columns: minmax(0, 1fr); }
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .page { padding-block: 20px 36px; gap: 16px; }
+  .stage { height: clamp(360px, 58vh, 520px); }
+  .facts { grid-template-columns: minmax(0, 1fr); }
+  .specs div { padding: 9px 10px; }
+  .stage-hint { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tag { transition: none; }
+}
+</style>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div class="page">
+  <header class="head">
+    <p class="eyebrow">Proyecto de microbiología · 3 propuestas</p>
+    <h1>Maqueta de <i>Salmonella</i></h1>
+    <p class="lede">Míralas en 3D antes de armar la física. Gira el modelo, acércate y pasa el cursor (o toca) cada parte de la lista para ubicarla.</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Propuestas">
+    <button type="button" class="tab" role="tab" id="tab-completa" aria-controls="panel-completa" aria-selected="true" data-view="completa"><span class="tab-n">1</span>Completa</button>
+    <button type="button" class="tab" role="tab" id="tab-corte" aria-controls="panel-corte" aria-selected="false" data-view="corte"><span class="tab-n">2</span>Con corte<span class="tab-badge">Recomendada</span></button>
+    <button type="button" class="tab" role="tab" id="tab-infeccion" aria-controls="panel-infeccion" aria-selected="false" data-view="infeccion"><span class="tab-n">3</span>Infección</button>
+  </div>
+
+  <div class="bench">
+    <section class="stage" aria-label="Vista 3D de la propuesta">
+      <canvas id="stage-canvas" role="img" aria-label="Modelo 3D de la maqueta"></canvas>
+      <div class="tags" id="tags" aria-hidden="true"></div>
+      <div class="stage-tools">
+        <button type="button" class="tool" id="btn-tags" aria-pressed="true">Etiquetas</button>
+        <button type="button" class="tool" id="btn-spin" aria-pressed="false">Girar solo</button>
+        <button type="button" class="tool" id="btn-reset">Centrar</button>
+      </div>
+      <p class="stage-hint">Arrastra para girar · pellizca o usa la rueda para acercar</p>
+      <div class="stage-loading" id="stage-loading">Cargando modelo 3D…</div>
+      <div class="stage-msg" id="stage-msg" hidden>
+        <p><strong>No se pudo mostrar el 3D.</strong> Revisa tu conexión o abre la página en Chrome, Edge o Firefox. La descripción de cada propuesta sigue disponible.</p>
+      </div>
+    </section>
+
+    <aside class="card">
+      <article class="prop" id="panel-completa" data-view="completa" role="tabpanel" aria-labelledby="tab-completa">
+        <h2>Bacteria completa</h2>
+        <p class="prop-desc">La bacteria entera, unas 100 000 veces más grande que la real. Es la más rápida de armar y se entiende de un vistazo.</p>
+        <dl class="specs">
+          <div><dt>Dificultad</dt><dd><span class="meter" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span>Fácil</dd></div>
+          <div><dt>Tiempo</dt><dd>1 día</dd></div>
+          <div><dt>Costo</dt><dd>Bajo</dd></div>
+        </dl>
+        <h3>Qué muestra</h3>
+        <ul class="parts">
+          <li tabindex="0" data-pins="0"><span class="sw" style="--sw: #e0607e"></span><span class="pt"><b>Cuerpo de bacilo</b><span>Forma de bastón; la real mide 2–5 µm. Va rosa porque en la tinción de Gram las bacterias Gram negativas se ven rosas.</span></span></li>
+          <li tabindex="0" data-pins="1"><span class="sw" style="--sw: #e0607e"></span><span class="pt"><b>Membrana externa</b><span>La capa de afuera. Lleva LPS, que es el antígeno O.</span></span></li>
+          <li tabindex="0" data-pins="2"><span class="sw" style="--sw: #7a3363"></span><span class="pt"><b>Flagelos</b><span>Salen de todo el cuerpo (perítricos) y le sirven para nadar. Son el antígeno H.</span></span></li>
+          <li tabindex="0" data-pins="3"><span class="sw" style="--sw: #f2e1c6"></span><span class="pt"><b>Fimbrias</b><span>Pelitos cortos con los que se pega a las células del intestino.</span></span></li>
+        </ul>
+        <h3>Materiales</h3>
+        <ul class="mats">
+          <li><b>Cuerpo:</b> cilindro de unicel con media esfera en cada punta, pintado de rosa.</li>
+          <li><b>Flagelos:</b> limpiapipas o alambre forrado, enrollado en un lápiz para que quede en espiral.</li>
+          <li><b>Fimbrias:</b> palillos cortados o alfileres.</li>
+          <li><b>Base:</b> MDF o cartón grueso, con 2 palitos de brocheta como soporte.</li>
+          <li><b>Etiquetas:</b> banderitas de papel con alfiler.</li>
+        </ul>
+      </article>
+
+      <article class="prop" id="panel-corte" data-view="corte" role="tabpanel" aria-labelledby="tab-corte" hidden>
+        <h2>Bacteria con corte</h2>
+        <p class="prop-desc">Por fuera se ve completa, pero le falta una rebanada que deja ver sus capas y su interior. Es la que mejor equilibra trabajo y contenido.</p>
+        <dl class="specs">
+          <div><dt>Dificultad</dt><dd><span class="meter" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span>Media</dd></div>
+          <div><dt>Tiempo</dt><dd>2 días</dd></div>
+          <div><dt>Costo</dt><dd>Medio</dd></div>
+        </dl>
+        <h3>Qué muestra</h3>
+        <ul class="parts">
+          <li tabindex="0" data-pins="0"><span class="sw" style="--sw: #cc4b6d"></span><span class="pt"><b>Membrana externa</b><span>Capa de afuera, con LPS (antígeno O).</span></span></li>
+          <li tabindex="0" data-pins="1"><span class="sw" style="--sw: #f0bf45"></span><span class="pt"><b>Peptidoglucano</b><span>Pared delgada entre las dos membranas, típica de las Gram negativas.</span></span></li>
+          <li tabindex="0" data-pins="2"><span class="sw" style="--sw: #4d84c4"></span><span class="pt"><b>Membrana interna</b><span>Controla lo que entra y sale de la célula.</span></span></li>
+          <li tabindex="0" data-pins="3"><span class="sw" style="--sw: #f6e9d8"></span><span class="pt"><b>Citoplasma</b><span>El relleno donde está todo lo demás.</span></span></li>
+          <li tabindex="0" data-pins="4"><span class="sw" style="--sw: #6a43ae"></span><span class="pt"><b>ADN (nucleoide)</b><span>Un cromosoma circular suelto. Las bacterias no tienen núcleo.</span></span></li>
+          <li tabindex="0" data-pins="5"><span class="sw" style="--sw: #3a3545"></span><span class="pt"><b>Ribosomas</b><span>Fabrican las proteínas (tipo 70S).</span></span></li>
+          <li tabindex="0" data-pins="6"><span class="sw" style="--sw: #2e9c6c"></span><span class="pt"><b>Plásmidos</b><span>Anillos de ADN extra. Algunos traen genes de virulencia o de resistencia a antibióticos.</span></span></li>
+          <li tabindex="0" data-pins="7 8"><span class="sw" style="--sw: #7a3363"></span><span class="pt"><b>Flagelos y fimbrias</b><span>Igual que en la propuesta 1, en la parte sin cortar.</span></span></li>
+        </ul>
+        <h3>Materiales</h3>
+        <ul class="mats">
+          <li><b>Cuerpo:</b> unicel; la rebanada se corta con cúter o cortador de unicel.</li>
+          <li><b>Capas:</b> tiras de foami rosa, amarillo y azul en el borde del corte.</li>
+          <li><b>Peptidoglucano:</b> como detalle extra, tul amarillo, porque en realidad es una malla.</li>
+          <li><b>ADN:</b> estambre morado enredado.</li>
+          <li><b>Ribosomas:</b> chaquira o bolitas de plastilina.</li>
+          <li><b>Plásmidos:</b> ligas pequeñas o aros de limpiapipas.</li>
+        </ul>
+        <p class="prop-note">Las capas van más gruesas que en la realidad para que se distingan. Vale la pena decirlo al exponer.</p>
+      </article>
+
+      <article class="prop" id="panel-infeccion" data-view="infeccion" role="tabpanel" aria-labelledby="tab-infeccion" hidden>
+        <h2>Infección en el intestino</h2>
+        <p class="prop-desc">Una escena con células del intestino donde la <i>Salmonella</i> entra paso a paso. Es la más vistosa y explica cómo enferma, pero es la que más trabajo lleva.</p>
+        <dl class="specs">
+          <div><dt>Dificultad</dt><dd><span class="meter" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span>Alta</dd></div>
+          <div><dt>Tiempo</dt><dd>3–4 días</dd></div>
+          <div><dt>Costo</dt><dd>Medio–alto</dd></div>
+        </dl>
+        <h3>Paso a paso</h3>
+        <ul class="parts">
+          <li tabindex="0" data-pins="0 1"><span class="stepn">1</span><span class="pt"><b>Adhesión</b><span>Llega nadando y se pega con sus fimbrias a las células del intestino delgado.</span></span></li>
+          <li tabindex="0" data-pins="2"><span class="stepn">2</span><span class="pt"><b>Inyección</b><span>Su sistema de secreción tipo III funciona como una jeringa y mete proteínas a la célula.</span></span></li>
+          <li tabindex="0" data-pins="3"><span class="stepn">3</span><span class="pt"><b>Ondulación de membrana</b><span>Esas proteínas hacen que la membrana forme olas que la envuelven.</span></span></li>
+          <li tabindex="0" data-pins="4"><span class="stepn">4</span><span class="pt"><b>Vacuola (SCV)</b><span>Queda dentro de una burbuja de membrana donde está protegida.</span></span></li>
+          <li tabindex="0" data-pins="5"><span class="stepn">5</span><span class="pt"><b>Replicación</b><span>Se multiplica adentro. La inflamación que provoca causa diarrea y fiebre.</span></span></li>
+          <li tabindex="0" data-pins="6 7 8"><span class="sw" style="--sw: #f0b48c"></span><span class="pt"><b>Enterocito</b><span>La célula del intestino, con su núcleo y sus microvellosidades.</span></span></li>
+        </ul>
+        <h3>Materiales</h3>
+        <ul class="mats">
+          <li><b>Células:</b> bloques de unicel o esponja color durazno.</li>
+          <li><b>Microvellosidades:</b> palillos o cotonetes cortados.</li>
+          <li><b>Núcleos:</b> medias bolas de plastilina morada.</li>
+          <li><b>Bacterias:</b> plastilina rosa, con flagelos de hilo o alambre delgado.</li>
+          <li><b>Jeringas (SST3):</b> alfileres.</li>
+          <li><b>Olas de membrana:</b> plastilina o foami moldeado.</li>
+          <li><b>Vacuolas:</b> mitades de esferas navideñas transparentes.</li>
+        </ul>
+      </article>
+    </aside>
+  </div>
+
+  <section class="ficha" aria-labelledby="ficha-t">
+    <div class="ficha-head">
+      <h2 id="ficha-t">Ficha de inocuidad</h2>
+      <p>Va en la base de cualquiera de las tres. Es lo que conecta la maqueta con tu carrera.</p>
+    </div>
+    <dl class="facts">
+      <div><dt>Alimentos de riesgo</dt><dd>Huevo crudo o poco cocido, pollo, cerdo, leche sin pasteurizar, frutas y verduras contaminadas.</dd></div>
+      <div><dt>Crece entre</dt><dd><span class="num">5 y 46 °C</span>, mejor a <span class="num">~37 °C</span>. pH <span class="num">3.8–9.5</span>, a<sub>w</sub> mínima <span class="num">0.94</span>.</dd></div>
+      <div><dt>Se elimina con</dt><dd>Cocción a <span class="num">≥ 74 °C</span> en el centro del alimento, o pasteurización.</dd></div>
+      <div><dt>Se frena con</dt><dd>Refrigeración a <span class="num">≤ 4 °C</span>. El frío la detiene pero no la mata.</dd></div>
+      <div><dt>Se previene con</dt><dd>Separar crudos de cocidos, lavarse las manos y cuidar la cadena de frío (NOM-251-SSA1-2009).</dd></div>
+      <div><dt>Enfermedad</dt><dd>Salmonelosis: diarrea, fiebre y cólicos, entre <span class="num">6 h</span> y <span class="num">6 días</span> después de comer.</dd></div>
+    </dl>
+  </section>
+</div>
+
+<script>
+(function () {
+  var views = ['completa', 'corte', 'infeccion'];
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  var panels = Array.prototype.slice.call(document.querySelectorAll('.prop'));
+  function show(name, fromUser) {
+    if (views.indexOf(name) === -1) name = 'completa';
+    document.documentElement.setAttribute('data-view', name);
+    tabs.forEach(function (t) {
+      var on = t.getAttribute('data-view') === name;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+    });
+    panels.forEach(function (p) { p.hidden = p.getAttribute('data-view') !== name; });
+    if (fromUser && location.hash !== '#' + name) {
+      try { history.replaceState(null, '', '#' + name); } catch (e) { /* sin hash */ }
+    }
+    document.dispatchEvent(new CustomEvent('maqueta:view', { detail: name }));
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { show(t.getAttribute('data-view'), true); });
+    t.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      e.preventDefault();
+      var next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+      next.focus();
+      show(next.getAttribute('data-view'), true);
+    });
+  });
+  window.addEventListener('hashchange', function () { show(location.hash.slice(1), false); });
+  show(location.hash.slice(1), false);
+  setTimeout(function () {
+    if (!window.__maquetaReady) {
+      document.getElementById('stage-loading').hidden = true;
+      document.getElementById('stage-msg').hidden = false;
+    }
+  }, 15000);
+})();
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+window.__maquetaReady = true;
+
+const stageEl = document.querySelector('.stage');
+const canvas = document.getElementById('stage-canvas');
+const tagLayer = document.getElementById('tags');
+const loadingEl = document.getElementById('stage-loading');
+const msgEl = document.getElementById('stage-msg');
+const btnTags = document.getElementById('btn-tags');
+const btnSpin = document.getElementById('btn-spin');
+const btnReset = document.getElementById('btn-reset');
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+try {
+  start();
+} catch (err) {
+  loadingEl.hidden = true;
+  msgEl.hidden = false;
+  console.error(err);
+}
+
+function start() {
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setClearColor(0x000000, 0);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+
+  const scene = new THREE.Scene();
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+  pmrem.dispose();
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xcfc6d8, 0.45));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.9);
+  sun.position.set(4.5, 9, 6.5);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  const sc = sun.shadow.camera;
+  sc.left = -7; sc.right = 7; sc.top = 7; sc.bottom = -7; sc.near = 1; sc.far = 30;
+  sc.updateProjectionMatrix();
+  sun.shadow.bias = -0.0005;
+  sun.shadow.normalBias = 0.025;
+  scene.add(sun);
+
+  const catcher = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.ShadowMaterial({ opacity: 0.14 }));
+  catcher.rotation.x = -Math.PI / 2;
+  catcher.position.y = -0.31;
+  catcher.receiveShadow = true;
+  scene.add(catcher);
+
+  const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
+  const controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 2.5;
+  controls.maxDistance = 20;
+  controls.maxPolarAngle = Math.PI * 0.495;
+  controls.autoRotateSpeed = 1.1;
+
+  // ---------- utilidades ----------
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  const UP = V(0, 1, 0);
+  const mm = new THREE.Matrix4();
+  const qId = new THREE.Quaternion();
+
+  function rng(seed) {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function shadowed(o, receive = true) {
+    o.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = receive; } });
+    return o;
+  }
+
+  // Colores de "pintura" (los mismos que las muestras de la ficha)
+  const COL = {
+    body: '#e0607e', bodyCut: '#cc4b6d', flag: '#7a3363', fim: '#f2e1c6',
+    pg: '#f0bf45', im: '#4d84c4', cyto: '#f6e9d8', dna: '#6a43ae', ribo: '#3a3545', plasmid: '#2e9c6c',
+    stick: '#d6b68a', cell: '#f0b48c', cellAlt: '#e9a87f', villi: '#d98b66', nucleus: '#7c5ea8',
+    ruffle: '#f7d3b3', needle: '#8e8b9c', effector: '#f08a24', vacuole: '#dff1ff', pinHead: '#c2255c',
+  };
+  const std = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.72, metalness: 0, ...o });
+  const M = {
+    body: std(COL.body, { roughness: 0.62 }),
+    flag: std(COL.flag, { roughness: 0.55 }),
+    fim: std(COL.fim, { roughness: 0.8 }),
+    stick: std(COL.stick, { roughness: 0.8 }),
+    dna: std(COL.dna, { roughness: 0.6 }),
+    ribo: std(COL.ribo, { roughness: 0.5 }),
+    plasmid: std(COL.plasmid, { roughness: 0.5 }),
+    cell: std(COL.cell, { roughness: 0.85 }),
+    cellAlt: std(COL.cellAlt, { roughness: 0.85 }),
+    villi: std(COL.villi, { roughness: 0.8 }),
+    nucleus: std(COL.nucleus, { roughness: 0.6 }),
+    ruffle: std(COL.ruffle, { roughness: 0.8 }),
+    needle: std(COL.needle, { roughness: 0.35, metalness: 0.5 }),
+    effector: std(COL.effector, { roughness: 0.5 }),
+    vacuole: new THREE.MeshPhysicalMaterial({ color: COL.vacuole, roughness: 0.08, metalness: 0, transparent: true, opacity: 0.32, clearcoat: 1, depthWrite: false }),
+    vacuoleRim: std('#bcd7ea', { roughness: 0.4 }),
+    pinStick: std('#cfcbd6', { roughness: 0.3, metalness: 0.7 }),
+    pinHead: std(COL.pinHead, { roughness: 0.35 }),
+  };
+  const faceMat = c => std(c, { roughness: 0.9, side: THREE.DoubleSide });
+
+  // ---------- geometría de la cápsula (bacilo acostado sobre X) ----------
+  function capsulePoint(R, H, s, phi, pos, nrm) {
+    const cap = (Math.PI * R) / 2;
+    const d = s * (2 * cap + 2 * H);
+    let px, py, nx, ny;
+    if (d < cap) {
+      const a = -Math.PI / 2 + d / R;
+      nx = Math.cos(a); ny = Math.sin(a); px = R * nx; py = -H + R * ny;
+    } else if (d < cap + 2 * H) {
+      nx = 1; ny = 0; px = R; py = -H + (d - cap);
+    } else {
+      const a = (d - cap - 2 * H) / R;
+      nx = Math.cos(a); ny = Math.sin(a); px = R * nx; py = H + R * ny;
+    }
+    const sp = Math.sin(phi), cp = Math.cos(phi);
+    pos.set(py, -px * sp, px * cp);
+    nrm.set(ny, -nx * sp, nx * cp);
+    return px;
+  }
+
+  function sampleCapsule(R, H, count, r, accept, minDist = 0) {
+    const out = [];
+    for (let guard = 0; out.length < count && guard < count * 300; guard++) {
+      const s = r(), phi = r() * Math.PI * 2;
+      const p = new THREE.Vector3(), n = new THREE.Vector3();
+      const px = capsulePoint(R, H, s, phi, p, n);
+      if (r() > px / R + 0.03) continue;
+      if (accept && !accept(phi, p, n)) continue;
+      if (minDist && out.some(o => o.p.distanceToSquared(p) < minDist * minDist)) continue;
+      out.push({ p, n, phi });
+    }
+    return out;
+  }
+
+  function fimbriae(samples, r, len0, len1, rad) {
+    const geo = new THREE.CylinderGeometry(rad * 0.7, rad, 1, 5, 1);
+    geo.translate(0, 0.5, 0);
+    const im = new THREE.InstancedMesh(geo, M.fim, samples.length);
+    const q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3();
+    samples.forEach((o, i) => {
+      q.setFromUnitVectors(UP, o.n);
+      p.copy(o.p).addScaledVector(o.n, -0.01);
+      s.set(1, len0 + r() * (len1 - len0), 1);
+      im.setMatrixAt(i, mm.compose(p, q, s));
+    });
+    im.instanceMatrix.needsUpdate = true;
+    im.castShadow = true;
+    im.frustumCulled = false;
+    return im;
+  }
+
+  function flagellumPoints(p, n, r, o) {
+    const { trail = null, trailK = 0.8, lift = 0.1, liftNeg = 0.5 } = o;
+    const D = n.clone();
+    if (trail) D.addScaledVector(trail, trailK);
+    D.addScaledVector(UP, n.y < 0 ? liftNeg : lift);
+    D.x += (r() - 0.5) * 0.35; D.y += (r() - 0.5) * 0.25; D.z += (r() - 0.5) * 0.35;
+    D.normalize();
+    const ref = Math.abs(D.y) < 0.92 ? UP : V(1, 0, 0);
+    const e1 = new THREE.Vector3().crossVectors(D, ref).normalize();
+    const e2 = new THREE.Vector3().crossVectors(D, e1).normalize();
+    const ba = r() * Math.PI * 2;
+    const bend = e1.clone().multiplyScalar(Math.cos(ba)).addScaledVector(e2, Math.sin(ba));
+    const ph = r() * Math.PI * 2;
+    const pts = [];
+    for (let i = 0; i <= 80; i++) {
+      const t = i / 80;
+      const k = Math.min(1, t / 0.18);
+      const env = k * k * (3 - 2 * k);
+      const w = 2 * Math.PI * o.waves * t + ph;
+      const q = p.clone()
+        .addScaledVector(n, -0.03 * (1 - t))
+        .addScaledVector(D, o.length * t)
+        .addScaledVector(bend, o.length * 0.25 * t * t)
+        .addScaledVector(e1, Math.cos(w) * o.amp * env)
+        .addScaledVector(e2, Math.sin(w) * o.amp * env);
+      if (o.yMin !== undefined && q.y < o.yMin) q.y = o.yMin;
+      pts.push(q);
+    }
+    return pts;
+  }
+
+  function tube(pts, radius, mat, segs = 150, radial = 7) {
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), segs, radius, radial, false), mat));
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(radius * 1.15, 10, 8), mat);
+    tip.position.copy(pts[pts.length - 1]);
+    g.add(tip);
+    return shadowed(g);
+  }
+
+  function addFlagella(parent, o) {
+    const cands = sampleCapsule(o.R, o.H, o.count * 8, o.r, o.accept, o.minDist);
+    const made = [];
+    for (const c of cands) {
+      if (made.length >= o.count) break;
+      const pts = flagellumPoints(c.p, c.n, o.r, {
+        length: o.len[0] + o.r() * (o.len[1] - o.len[0]),
+        amp: o.amp,
+        waves: o.waves[0] + o.r() * (o.waves[1] - o.waves[0]),
+        yMin: o.yMin, lift: o.lift, liftNeg: o.liftNeg, trail: o.trail, trailK: o.trailK,
+      });
+      if (o.reject && pts.some(o.reject)) continue;
+      parent.add(tube(pts, o.radius, M.flag, o.segs, o.radial));
+      made.push(pts);
+    }
+    return made;
+  }
+
+  function rod(x, z, top) {
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.042, top, 12), M.stick);
+    m.position.set(x, top / 2, z);
+    return shadowed(m);
+  }
+
+  // ---------- base de madera y letreros ----------
+  const maxAniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  function canvasTex(w, h, draw) {
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    draw(c.getContext('2d'), w, h);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.anisotropy = maxAniso;
+    return t;
+  }
+  const woodMat = new THREE.MeshStandardMaterial({
+    roughness: 0.62,
+    map: canvasTex(1024, 512, (g, W, H) => {
+      g.fillStyle = '#c99c6e';
+      g.fillRect(0, 0, W, H);
+      const r = rng(7);
+      for (let i = 0; i < 110; i++) {
+        const y0 = r() * H;
+        const dark = r() < 0.55;
+        g.strokeStyle = dark ? `rgba(110, 70, 36, ${0.06 + r() * 0.12})` : `rgba(255, 235, 205, ${0.05 + r() * 0.1})`;
+        g.lineWidth = 1 + r() * 3.5;
+        g.beginPath();
+        for (let x = 0; x <= W; x += 16) {
+          const y = y0 + Math.sin(x * 0.005 + i) * 7 + Math.sin(x * 0.019 + i * 2.3) * 2.5;
+          if (x === 0) g.moveTo(x, y); else g.lineTo(x, y);
+        }
+        g.stroke();
+      }
+    }),
+  });
+  function base(W, D) {
+    const m = new THREE.Mesh(new RoundedBoxGeometry(W, 0.3, D, 3, 0.05), woodMat);
+    m.position.y = -0.15;
+    m.castShadow = true;
+    m.receiveShadow = true;
+    return m;
+  }
+
+  const edgeMat = std('#efe9df', { roughness: 0.85 });
+  function sign(w, h, slope, draw, x, z) {
+    const g = new THREE.Group();
+    const L = h * Math.cos(slope), Hw = h * Math.sin(slope);
+    const tri = new THREE.Shape([new THREE.Vector2(0, 0), new THREE.Vector2(L, 0), new THREE.Vector2(L, Hw)]);
+    const wedgeGeo = new THREE.ExtrudeGeometry(tri, { depth: w * 0.9, bevelEnabled: false });
+    wedgeGeo.rotateY(Math.PI / 2);
+    wedgeGeo.translate(-w * 0.45, 0, 0);
+    g.add(new THREE.Mesh(wedgeGeo, M.stick));
+    const front = new THREE.MeshStandardMaterial({ map: canvasTex(1024, Math.round((1024 * h) / w), draw), roughness: 0.85 });
+    const plate = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.04), [edgeMat, edgeMat, edgeMat, edgeMat, front, edgeMat]);
+    plate.rotation.x = -(Math.PI / 2 - slope);
+    plate.position.set(0, Hw / 2 + Math.cos(slope) * 0.021, -L / 2 + Math.sin(slope) * 0.021);
+    g.add(plate);
+    g.position.set(x, 0, z);
+    return shadowed(g);
+  }
+  const titleDraw = sub => (g, W, H) => {
+    g.fillStyle = '#fbf8f3';
+    g.fillRect(0, 0, W, H);
+    g.strokeStyle = '#c2255c';
+    g.lineWidth = 12;
+    g.strokeRect(20, 20, W - 40, H - 40);
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillStyle = '#241b25';
+    g.font = 'italic 700 120px Georgia, "Times New Roman", serif';
+    g.fillText('Salmonella', W / 2, H * 0.42);
+    g.fillStyle = '#6b5f6d';
+    g.font = '600 36px "Segoe UI", Arial, sans-serif';
+    g.fillText(sub, W / 2, H * 0.77);
+  };
+  const fichaDraw = (g, W, H) => {
+    g.fillStyle = '#ffffff';
+    g.fillRect(0, 0, W, H);
+    g.fillStyle = '#5a3e9e';
+    g.fillRect(0, 0, W, 132);
+    g.fillStyle = '#ffffff';
+    g.textBaseline = 'middle';
+    g.textAlign = 'left';
+    g.font = '700 62px "Segoe UI", Arial, sans-serif';
+    g.fillText('Ficha de inocuidad', 46, 68);
+    [['Cocción', '≥ 74 °C'], ['Refrigerar', '≤ 4 °C'], ['Crece entre', '5–46 °C'], ['Riesgo', 'huevo, pollo']].forEach(([k, v], i) => {
+      const y = 214 + i * 128;
+      g.textAlign = 'left';
+      g.fillStyle = '#6b5f6d';
+      g.font = '600 44px "Segoe UI", Arial, sans-serif';
+      g.fillText(k, 46, y);
+      g.textAlign = 'right';
+      g.fillStyle = '#241b25';
+      g.font = '700 54px "Segoe UI", Arial, sans-serif';
+      g.fillText(v, W - 46, y);
+      g.strokeStyle = '#e7e1ec';
+      g.lineWidth = 4;
+      g.beginPath();
+      g.moveTo(46, y + 60);
+      g.lineTo(W - 46, y + 60);
+      g.stroke();
+    });
+  };
+  function signs(root, W, D, sub) {
+    root.add(sign(2.3, 0.72, 0.62, titleDraw(sub), -W / 2 + 1.5, D / 2 - 0.22));
+    root.add(sign(1.35, 0.95, 1.05, fichaDraw, W / 2 - 1.0, D / 2 - 0.22));
+  }
+
+  // ---------- alfileres con etiqueta ----------
+  const pinStickGeo = new THREE.CylinderGeometry(0.009, 0.009, 1, 6);
+  const pinHeadGeo = new THREE.SphereGeometry(0.05, 16, 12);
+  function addPin(parent, list, text, anchor, dir, len) {
+    const d = dir.clone().normalize();
+    const g = new THREE.Group();
+    const stick = new THREE.Mesh(pinStickGeo, M.pinStick);
+    stick.scale.set(1, len, 1);
+    stick.position.copy(anchor).addScaledVector(d, len / 2);
+    stick.quaternion.setFromUnitVectors(UP, d);
+    const head = new THREE.Mesh(pinHeadGeo, M.pinHead);
+    head.position.copy(anchor).addScaledVector(d, len);
+    g.add(stick, head);
+    shadowed(g, false);
+    parent.add(g);
+    const el = document.createElement('span');
+    el.className = 'tag';
+    el.textContent = text;
+    el.hidden = true;
+    tagLayer.appendChild(el);
+    list.push({ el, g, head, parent, anchor: anchor.clone(), wHead: V(0, 0, 0), wAnchor: V(0, 0, 0), wDir: V(0, 0, 0) });
+  }
+
+  // ---------- Propuesta 1: bacteria completa ----------
+  function buildCompleta() {
+    const root = new THREE.Group();
+    const pins = [];
+    const W = 7, D = 4.4;
+    root.add(base(W, D));
+    signs(root, W, D, 'Bacilo Gram negativo · aumento ≈ 100 000×');
+    const R = 0.62, H = 1.15, lift = 1.8, zOff = -0.35;
+    const b = new THREE.Group();
+    b.position.set(0, lift, zOff);
+    root.add(b);
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(R, 2 * H, 24, 64), M.body);
+    body.rotation.z = -Math.PI / 2;
+    b.add(shadowed(body));
+    const r = rng(11);
+    b.add(fimbriae(sampleCapsule(R, H, 260, r, (phi, p, n) => n.y > -0.8), r, 0.13, 0.22, 0.013));
+    const reject = q => {
+      const wx = q.x, wy = q.y + lift, wz = q.z + zOff;
+      return Math.abs(wx) > W / 2 + 0.45 || Math.abs(wz) > D / 2 + 0.25 || (wz > D / 2 - 1.1 && wy < 1.15);
+    };
+    const flags = addFlagella(b, {
+      R, H, count: 11, r, len: [1.5, 2.2], amp: 0.11, waves: [3, 4.2], radius: 0.03, minDist: 0.5,
+      yMin: 0.08 - lift, lift: 0.12, liftNeg: 0.55, accept: (phi, p, n) => n.y > -0.6, reject,
+    });
+    for (const x of [-0.85, 0.85]) root.add(rod(x, zOff, lift - R + 0.12));
+    const P = (s, phi) => { const p = V(0, 0, 0), n = V(0, 0, 0); capsulePoint(R, H, s, phi, p, n); return p; };
+    addPin(b, pins, 'Bacilo · 2–5 µm', P(0.93, -0.5), V(0.9, 0.75, 0.3), 0.7);
+    addPin(b, pins, 'Membrana externa (LPS)', P(0.36, -0.3), V(-0.5, 0.95, 0.6), 0.95);
+    const fl = flags.length ? flags.reduce((a, pts) => (pts[40].y > a[40].y ? pts : a), flags[0]) : null;
+    addPin(b, pins, 'Flagelo', fl ? fl[44] : P(0.5, Math.PI * 1.5), V(-0.2, 1, 0.25), 0.5);
+    addPin(b, pins, 'Fimbrias', P(0.6, Math.PI + 0.75), V(0.3, 1, -0.1), 0.85);
+    return {
+      root, pins,
+      view: { pos: V(0.8, 3.3, 8.7), target: V(0, 1.7, 0), halfW: 4.6 },
+      alt: 'Modelo 3D: Salmonella completa sobre una base de madera, con flagelos, fimbrias y etiquetas en alfileres.',
+    };
+  }
+
+  // ---------- Propuesta 2: bacteria con corte ----------
+  function profile(R, H, n = 20) {
+    const pts = [];
+    for (let i = 0; i <= n; i++) {
+      const a = -Math.PI / 2 + (i / n) * (Math.PI / 2);
+      pts.push(new THREE.Vector2(i === 0 ? 0 : R * Math.cos(a), -H + R * Math.sin(a)));
+    }
+    for (let i = 0; i <= n; i++) {
+      const a = (i / n) * (Math.PI / 2);
+      pts.push(new THREE.Vector2(i === n ? 0 : R * Math.cos(a), H + R * Math.sin(a)));
+    }
+    return pts;
+  }
+  function bandShape(Ro, Ri, H) {
+    const pts = profile(Ro, H);
+    if (Ri > 0) pts.push(...profile(Ri, H).reverse());
+    return new THREE.Shape(pts);
+  }
+
+  function buildCorte() {
+    const root = new THREE.Group();
+    const pins = [];
+    const W = 7, D = 4.4;
+    root.add(base(W, D));
+    signs(root, W, D, 'Corte: capas e interior · aumento ≈ 100 000×');
+    const Rs = [0.8, 0.72, 0.63, 0.55];
+    const H = 1.3, lift = 1.95, zOff = -0.3, PHI = Math.PI * 1.5;
+    const b = new THREE.Group();
+    b.position.set(0, lift, zOff);
+    root.add(b);
+    const lathe = new THREE.Group();
+    lathe.rotation.z = -Math.PI / 2;
+    b.add(lathe);
+    lathe.add(shadowed(new THREE.Mesh(new THREE.LatheGeometry(profile(Rs[0], H, 24), 120, 0, PHI), M.body)));
+    const faceCols = [COL.bodyCut, COL.pg, COL.im, COL.cyto];
+    for (let i = 0; i < 4; i++) {
+      const geo = new THREE.ShapeGeometry(bandShape(Rs[i], i < 3 ? Rs[i + 1] : 0, H));
+      const mat = faceMat(faceCols[i]);
+      for (const ang of [0, PHI]) {
+        const m = new THREE.Mesh(geo, mat);
+        m.rotation.y = ang - Math.PI / 2;
+        lathe.add(shadowed(m));
+      }
+    }
+
+    // Interior: ADN enredado en la esquina del corte, plásmidos y ribosomas sobre las caras
+    const Rc = Rs[3];
+    const rcAt = x => {
+      const ax = Math.abs(x);
+      if (ax <= H) return Rc;
+      const d = ax - H;
+      return d >= Rc ? 0 : Math.sqrt(Rc * Rc - d * d);
+    };
+    const dnaPts = [];
+    for (let i = 0; i < 420; i++) {
+      const t = (i / 420) * Math.PI * 2;
+      dnaPts.push(V(
+        1.08 * Math.sin(3 * t + 0.3) * (0.86 + 0.14 * Math.cos(5 * t)),
+        0.17 + 0.115 * Math.sin(5 * t + 1.1) + 0.025 * Math.sin(17 * t),
+        0.17 + 0.115 * Math.sin(7 * t + 0.4) + 0.025 * Math.cos(13 * t)
+      ));
+    }
+    b.add(shadowed(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(dnaPts, true), 1100, 0.026, 6, true), M.dna)));
+
+    const plas = [
+      { p: V(0.92, 0.024, 0.43), flat: true },
+      { p: V(-0.6, 0.024, 0.44), flat: true },
+      { p: V(1.55, 0.36, 0.024), flat: false },
+    ];
+    const torusGeo = new THREE.TorusGeometry(0.07, 0.019, 10, 32);
+    for (const q of plas) {
+      const m = new THREE.Mesh(torusGeo, M.plasmid);
+      m.position.copy(q.p);
+      if (q.flat) m.rotation.x = -Math.PI / 2;
+      b.add(shadowed(m));
+    }
+    const rib = [];
+    const rr = rng(23);
+    for (let tries = 0; rib.length < 80 && tries < 5000; tries++) {
+      const x = (rr() * 2 - 1) * (H + Rc * 0.85);
+      const lim = rcAt(x) - 0.05;
+      if (lim < 0.12) continue;
+      const rad = 0.05 + rr() * (lim - 0.05);
+      const p = rr() < 0.55 ? V(x, 0.014, rad) : V(x, rad, 0.014);
+      if (plas.some(q => q.p.distanceTo(p) < 0.15)) continue;
+      if (rib.some(q => q.distanceTo(p) < 0.085)) continue;
+      if (dnaPts.some(q => q.distanceTo(p) < 0.07)) continue;
+      rib.push(p);
+    }
+    const ribIM = new THREE.InstancedMesh(new THREE.SphereGeometry(0.032, 12, 8), M.ribo, rib.length);
+    rib.forEach((p, i) => ribIM.setMatrixAt(i, mm.makeTranslation(p.x, p.y, p.z)));
+    ribIM.instanceMatrix.needsUpdate = true;
+    ribIM.castShadow = true;
+    ribIM.frustumCulled = false;
+    b.add(ribIM);
+
+    // Exterior: fimbrias y flagelos solo en la parte sin cortar
+    const r = rng(12);
+    const inSolid = phi => phi > 0.12 && phi < PHI - 0.12;
+    b.add(fimbriae(sampleCapsule(Rs[0], H, 200, r, (phi, p, n) => inSolid(phi) && n.y > -0.8), r, 0.12, 0.2, 0.013));
+    const reject = q => {
+      if (q.y > -0.08 && q.z > -0.08 && Math.abs(q.x) < H + 1.1 && Math.hypot(q.y, q.z) < 1.6) return true;
+      const wx = q.x, wy = q.y + lift, wz = q.z + zOff;
+      return Math.abs(wx) > W / 2 + 0.45 || Math.abs(wz) > D / 2 + 0.25 || (wz > D / 2 - 1.1 && wy < 1.15);
+    };
+    const flags = addFlagella(b, {
+      R: Rs[0], H, count: 8, r, len: [1.4, 2.0], amp: 0.1, waves: [2.8, 3.6], radius: 0.028, minDist: 0.55,
+      yMin: 0.08 - lift, lift: 0.1, liftNeg: 0.2, accept: (phi, p, n) => inSolid(phi) && n.y > -0.6, reject,
+    });
+    for (const x of [-1.0, 1.0]) root.add(rod(x, zOff, lift - Rs[0] + 0.12));
+
+    addPin(b, pins, 'Membrana externa (LPS)', V(-1.15, (Rs[0] + Rs[1]) / 2, 0.004), V(-0.9, 1, 0.35), 1.0);
+    addPin(b, pins, 'Peptidoglucano', V(-0.45, (Rs[1] + Rs[2]) / 2, 0.004), V(-0.2, 1, 0.55), 1.45);
+    addPin(b, pins, 'Membrana interna', V(0.35, (Rs[2] + Rs[3]) / 2, 0.004), V(0.1, 1, 0.45), 1.3);
+    addPin(b, pins, 'Citoplasma', V(-1.5, 0.004, 0.2), V(-0.75, 1, 0.5), 0.8);
+    const dRight = dnaPts.filter(q => q.x > 0.3);
+    const dTop = (dRight.length ? dRight : dnaPts).reduce((a, q) => (q.y + q.z > a.y + a.z ? q : a));
+    addPin(b, pins, 'ADN (nucleoide)', dTop, V(0.25, 1, 0.5), 0.75);
+    const rb = rib.filter(p => p.y < 0.02 && p.x > 0.1 && p.x < 1.0).sort((a, c) => c.z - a.z)[0] || V(0.4, 0.014, 0.45);
+    addPin(b, pins, 'Ribosomas', rb, V(0.35, 1, 0.8), 0.85);
+    addPin(b, pins, 'Plásmido', plas[0].p.clone().add(V(0.07, 0.01, 0)), V(0.85, 1, 0.4), 0.75);
+    const fl = flags.length ? flags.reduce((a, pts) => (pts[60].x < a[60].x ? pts : a), flags[0]) : null;
+    addPin(b, pins, 'Flagelo', fl ? fl[50] : V(-H - Rs[0], 0, 0), V(-0.3, 1, 0.3), 0.45);
+    const fp = V(0, 0, 0), fn = V(0, 0, 0);
+    capsulePoint(Rs[0], H, 0.72, Math.PI + 0.85, fp, fn);
+    addPin(b, pins, 'Fimbrias', fp, V(0.35, 1, -0.25), 0.8);
+    return {
+      root, pins,
+      view: { pos: V(2.4, 5.2, 7.2), target: V(0, 1.6, 0.1), halfW: 4.6 },
+      alt: 'Modelo 3D: Salmonella con una rebanada cortada que muestra sus membranas, el peptidoglucano, el ADN, ribosomas y plásmidos.',
+    };
+  }
+
+  // ---------- Propuesta 3: infección en el intestino ----------
+  function microbe(o) {
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(o.R, 2 * o.H, 12, 28), M.body);
+    body.rotation.z = -Math.PI / 2;
+    g.add(shadowed(body));
+    const r = rng(o.seed);
+    if (o.fims) g.add(fimbriae(sampleCapsule(o.R, o.H, o.fims, r), r, 0.045, 0.075, 0.0065));
+    if (o.flagella) {
+      addFlagella(g, {
+        R: o.R, H: o.H, count: o.flagella, r, len: [o.flagLen * 0.8, o.flagLen * 1.2], amp: o.R * 0.3, waves: [2.4, 3.2],
+        radius: 0.012, minDist: o.R * 0.6, lift: 0, liftNeg: 0, trail: V(-1, 0, 0), trailK: 1.6, segs: 90, radial: 5,
+        accept: (phi, p) => p.x < -o.H * 0.3,
+      });
+    }
+    return g;
+  }
+
+  function arcShape(r1, r2, a0, a1, seg = 28) {
+    const s = new THREE.Shape();
+    for (let i = 0; i <= seg; i++) {
+      const a = a0 + ((a1 - a0) * i) / seg;
+      if (i === 0) s.moveTo(Math.cos(a) * r2, Math.sin(a) * r2);
+      else s.lineTo(Math.cos(a) * r2, Math.sin(a) * r2);
+    }
+    for (let i = seg; i >= 0; i--) {
+      const a = a0 + ((a1 - a0) * i) / seg;
+      s.lineTo(Math.cos(a) * r1, Math.sin(a) * r1);
+    }
+    s.closePath();
+    return s;
+  }
+
+  function buildInfeccion() {
+    const root = new THREE.Group();
+    const pins = [];
+    const W = 7.6, D = 4.6;
+    root.add(base(W, D));
+    signs(root, W, D, 'Invasión de una célula del intestino');
+    const cw = 1.12, ch = 1.9, cd = 1.7, zc = -0.45, top = ch, front = zc + cd / 2;
+    const xs = [-2, -1, 0, 1, 2].map(i => i * (cw + 0.04));
+    const bz = zc + 0.1;
+    const cellGeo = new RoundedBoxGeometry(cw, ch, cd, 3, 0.1);
+    const nucGeo = new THREE.SphereGeometry(1, 32, 20);
+    xs.forEach((x, i) => {
+      const cell = new THREE.Mesh(cellGeo, i % 2 ? M.cellAlt : M.cell);
+      cell.position.set(x, ch / 2, zc);
+      root.add(shadowed(cell));
+      const nuc = new THREE.Mesh(nucGeo, M.nucleus);
+      nuc.scale.set(0.3, 0.36, 0.11);
+      nuc.position.set(x, 0.62, front);
+      root.add(shadowed(nuc));
+    });
+
+    // Microvellosidades (con claros para que se vea la acción desde el frente)
+    const clear = [
+      { x0: xs[1] - 0.3, x1: xs[1] + 0.3, z0: bz - 0.28, z1: front },
+      { x0: xs[2] - 0.6, x1: xs[2] + 0.6, z0: bz - 0.36, z1: front },
+    ];
+    const spots = [];
+    const rv = rng(31);
+    xs.forEach(x => {
+      for (let ix = 0; ix < 9; ix++) {
+        for (let iz = 0; iz < 13; iz++) {
+          const px = x - 0.44 + ix * 0.11 + (rv() - 0.5) * 0.025;
+          const pz = zc - cd / 2 + 0.17 + iz * ((cd - 0.34) / 12) + (rv() - 0.5) * 0.025;
+          if (clear.some(c => px > c.x0 && px < c.x1 && pz > c.z0 && pz < c.z1)) continue;
+          spots.push([px, pz, 0.85 + rv() * 0.3]);
+        }
+      }
+    });
+    const villiGeo = new THREE.CapsuleGeometry(0.032, 0.16, 3, 8);
+    villiGeo.translate(0, 0.112, 0);
+    const villi = new THREE.InstancedMesh(villiGeo, M.villi, spots.length);
+    const sv = V(1, 1, 1), pv = V(0, 0, 0);
+    spots.forEach(([px, pz, s], i) => {
+      pv.set(px, top - 0.02, pz);
+      sv.set(1, s, 1);
+      villi.setMatrixAt(i, mm.compose(pv, qId, sv));
+    });
+    villi.instanceMatrix.needsUpdate = true;
+    villi.castShadow = true;
+    villi.receiveShadow = true;
+    villi.frustumCulled = false;
+    root.add(villi);
+
+    // Bacteria que llega nadando
+    const b0 = microbe({ R: 0.15, H: 0.22, seed: 41, fims: 40, flagella: 5, flagLen: 0.9 });
+    b0.position.set(xs[0] - 0.7, 3.25, bz + 0.45);
+    b0.rotation.z = -0.55;
+    root.add(b0);
+    // 1. Adhesión
+    const b1 = microbe({ R: 0.15, H: 0.22, seed: 42, fims: 80, flagella: 3, flagLen: 0.6 });
+    b1.position.set(xs[0] + 0.05, 2.27, bz);
+    b1.rotation.y = 0.35;
+    root.add(b1);
+    // 2. Inyección con el sistema de secreción tipo III
+    const b2 = microbe({ R: 0.15, H: 0.22, seed: 43, fims: 50, flagella: 3, flagLen: 0.6 });
+    b2.position.set(xs[1], 2.3, bz);
+    root.add(b2);
+    const needleGeo = new THREE.CylinderGeometry(0.009, 0.009, 1, 6);
+    const ringGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.035, 14);
+    const y0 = 2.3 - 0.15, tipY = top + 0.005;
+    [-0.16, 0, 0.16].forEach(dx => {
+      const ring = new THREE.Mesh(ringGeo, M.needle);
+      ring.position.set(xs[1] + dx, y0, bz);
+      const needle = new THREE.Mesh(needleGeo, M.needle);
+      needle.scale.set(1, y0 - tipY, 1);
+      needle.position.set(xs[1] + dx, (y0 + tipY) / 2, bz);
+      root.add(shadowed(ring), shadowed(needle));
+    });
+    const re = rng(51);
+    const effGeo = new THREE.SphereGeometry(0.024, 10, 8);
+    for (let i = 0; i < 9; i++) {
+      const e = new THREE.Mesh(effGeo, M.effector);
+      e.position.set(xs[1] + (re() - 0.5) * 0.5, top + 0.012, bz + (re() - 0.5) * 0.4);
+      root.add(shadowed(e));
+    }
+    // 3. Ondulación de membrana que la envuelve
+    const b3 = microbe({ R: 0.15, H: 0.16, seed: 44, fims: 40, flagella: 0 });
+    b3.position.set(xs[2], 2.05, bz);
+    root.add(b3);
+    const waveOpts = { depth: 0.46, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.04, bevelSegments: 4, curveSegments: 4 };
+    [[0.42, 0.53, Math.PI / 2 + 0.2, Math.PI], [0.4, 0.5, 0, Math.PI / 2 - 0.55]].forEach(([r1, r2, a0, a1]) => {
+      const geo = new THREE.ExtrudeGeometry(arcShape(r1, r2, a0, a1), waveOpts);
+      geo.translate(0, 0, -0.23);
+      const m = new THREE.Mesh(geo, M.ruffle);
+      m.position.set(xs[2], top, bz);
+      root.add(shadowed(m));
+    });
+    // 4 y 5. Vacuolas en la cara frontal (cúpulas transparentes)
+    function vacuole(x, y, rad, inside) {
+      const g = new THREE.Group();
+      g.position.set(x, y, front);
+      inside.forEach(([dx, dy, rz, R, H]) => {
+        const m = new THREE.Mesh(new THREE.CapsuleGeometry(R, 2 * H, 10, 24), M.body);
+        m.rotation.set(0, 0, -Math.PI / 2 + rz);
+        m.position.set(dx, dy, 0.03);
+        g.add(shadowed(m));
+      });
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(rad, 40, 20, 0, Math.PI * 2, 0, Math.PI / 2), M.vacuole);
+      dome.rotation.x = Math.PI / 2;
+      dome.renderOrder = 2;
+      g.add(dome);
+      g.add(new THREE.Mesh(new THREE.TorusGeometry(rad, 0.014, 8, 56), M.vacuoleRim));
+      return g;
+    }
+    root.add(vacuole(xs[3], 1.38, 0.3, [[0, 0, 0.25, 0.11, 0.13]]));
+    root.add(vacuole(xs[4], 1.38, 0.36, [[-0.12, 0.09, 0.5, 0.09, 0.1], [0.12, 0.1, -0.6, 0.09, 0.1], [0, -0.14, 0.1, 0.09, 0.1]]));
+
+    addPin(root, pins, 'Salmonella', V(b0.position.x, b0.position.y + 0.14, b0.position.z), V(-0.5, 1, 0.2), 0.55);
+    addPin(root, pins, '1 · Adhesión', V(xs[0] + 0.05, 2.4, bz), V(-0.15, 1, 0.35), 0.8);
+    addPin(root, pins, '2 · Inyección', V(xs[1], 2.43, bz), V(0.05, 1, 0.35), 1.25);
+    addPin(root, pins, '3 · Ondulación de membrana', V(xs[2] - 0.15, top + 0.5, bz + 0.1), V(0.1, 1, 0.35), 0.75);
+    const domeAnchor = (x, rad, d) => V(x, 1.38, front).addScaledVector(d.clone().normalize(), rad);
+    const d4 = V(0.3, 0.8, 1), d5 = V(0.4, 0.8, 1);
+    addPin(root, pins, '4 · Vacuola (SCV)', domeAnchor(xs[3], 0.3, d4), d4, 0.75);
+    addPin(root, pins, '5 · Replicación', domeAnchor(xs[4], 0.36, d5), d5, 0.75);
+    addPin(root, pins, 'Microvellosidades', V(xs[4] + 0.3, top + 0.2, zc - 0.55), V(0.45, 1, -0.2), 0.75);
+    addPin(root, pins, 'Núcleo', V(xs[0] - 0.12, 0.62, front + 0.1), V(-0.7, -0.25, 1), 0.7);
+    addPin(root, pins, 'Enterocito', V(xs[4] + cw / 2, 1.0, zc + 0.3), V(1, 0.15, 0.35), 0.55);
+    return {
+      root, pins,
+      view: { pos: V(0.3, 4.1, 9.8), target: V(0, 1.75, 0), halfW: 4.8 },
+      alt: 'Modelo 3D: fila de células del intestino donde la Salmonella se adhiere, inyecta proteínas, es envuelta por la membrana y se multiplica dentro de vacuolas.',
+    };
+  }
+
+  // ---------- escenas ----------
+  const sets = { completa: buildCompleta(), corte: buildCorte(), infeccion: buildInfeccion() };
+  for (const key of Object.keys(sets)) {
+    const s = sets[key];
+    s.root.visible = false;
+    scene.add(s.root);
+    s.root.updateMatrixWorld(true);
+    for (const p of s.pins) {
+      p.head.getWorldPosition(p.wHead);
+      p.wAnchor.copy(p.anchor).applyMatrix4(p.parent.matrixWorld);
+      p.wDir.subVectors(p.wHead, p.wAnchor).normalize();
+    }
+  }
+
+  let current = null;
+  let tagsOn = true;
+  let anim = null;
+
+  function viewPose(set) {
+    const v = set.view;
+    const w = stageEl.clientWidth || 1, h = stageEl.clientHeight || 1;
+    const dir = v.pos.clone().sub(v.target);
+    const need = v.halfW / (Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * (w / h));
+    const k = Math.max(1, need / dir.length());
+    return { pos: v.target.clone().addScaledVector(dir, k), target: v.target.clone() };
+  }
+  function frame(instant) {
+    const pose = viewPose(current);
+    if (instant) {
+      camera.position.copy(pose.pos);
+      controls.target.copy(pose.target);
+      controls.update();
+      anim = null;
+      return;
+    }
+    anim = { t: 0, p0: camera.position.clone(), t0: controls.target.clone(), p1: pose.pos, t1: pose.target };
+  }
+  function setView(name, instant) {
+    const next = sets[name] || sets.completa;
+    if (next === current) return;
+    if (current) {
+      current.root.visible = false;
+      current.pins.forEach(p => { p.el.hidden = true; });
+    }
+    current = next;
+    current.root.visible = true;
+    current.pins.forEach(p => { p.el.hidden = !tagsOn; p.g.visible = tagsOn; });
+    canvas.setAttribute('aria-label', current.alt);
+    frame(instant || reduceMotion);
+  }
+
+  function hot(p, on) {
+    if (!p) return;
+    p.el.classList.toggle('is-hot', on);
+    p.head.scale.setScalar(on ? 1.9 : 1);
+    if (!tagsOn && current && current.pins.includes(p)) {
+      p.el.hidden = !on;
+      p.g.visible = on;
+    }
+  }
+  document.querySelectorAll('.prop').forEach(article => {
+    const set = sets[article.getAttribute('data-view')];
+    if (!set) return;
+    article.querySelectorAll('[data-pins]').forEach(li => {
+      const idx = li.getAttribute('data-pins').split(' ').map(Number);
+      const on = () => idx.forEach(i => hot(set.pins[i], true));
+      const off = () => idx.forEach(i => hot(set.pins[i], false));
+      li.addEventListener('pointerenter', on);
+      li.addEventListener('pointerleave', off);
+      li.addEventListener('focus', on);
+      li.addEventListener('blur', off);
+    });
+  });
+
+  btnTags.addEventListener('click', () => {
+    tagsOn = !tagsOn;
+    btnTags.setAttribute('aria-pressed', String(tagsOn));
+    current.pins.forEach(p => { p.el.hidden = !tagsOn; p.g.visible = tagsOn; });
+  });
+  btnSpin.addEventListener('click', () => {
+    controls.autoRotate = !controls.autoRotate;
+    btnSpin.setAttribute('aria-pressed', String(controls.autoRotate));
+  });
+  btnReset.addEventListener('click', () => frame(reduceMotion));
+  controls.addEventListener('start', () => { anim = null; });
+
+  function resize() {
+    const w = stageEl.clientWidth, h = stageEl.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  new ResizeObserver(resize).observe(stageEl);
+  resize();
+
+  const tmpH = V(0, 0, 0), tmpA = V(0, 0, 0), toCam = V(0, 0, 0);
+  function placeTags() {
+    const w = stageEl.clientWidth, h = stageEl.clientHeight;
+    for (const p of current.pins) {
+      if (p.el.hidden) continue;
+      tmpH.copy(p.wHead).project(camera);
+      tmpA.copy(p.wAnchor).project(camera);
+      if (tmpH.z > 1) { p.el.style.visibility = 'hidden'; continue; }
+      p.el.style.visibility = '';
+      const hx = (tmpH.x * 0.5 + 0.5) * w, hy = (-tmpH.y * 0.5 + 0.5) * h;
+      const dx = hx - (tmpA.x * 0.5 + 0.5) * w, dy = hy - (-tmpA.y * 0.5 + 0.5) * h;
+      let tx = '-50%', ty = '-100%', ox = 0, oy = -9;
+      if (Math.abs(dx) > Math.abs(dy) * 1.4) {
+        ty = '-50%'; oy = 0;
+        if (dx > 0) { tx = '0%'; ox = 9; } else { tx = '-100%'; ox = -9; }
+      } else if (dy > 0) {
+        ty = '0%'; oy = 9;
+      }
+      p.el.style.transform = `translate(${(hx + ox).toFixed(1)}px, ${(hy + oy).toFixed(1)}px) translate(${tx}, ${ty})`;
+      toCam.copy(camera.position).sub(p.wHead).normalize();
+      p.el.classList.toggle('is-back', p.wDir.dot(toCam) < -0.2);
+      p.el.style.zIndex = String(Math.round((1 - tmpH.z) * 10000));
+    }
+  }
+
+  const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  const clock = new THREE.Clock();
+  let firstFrame = true;
+  function tick() {
+    const dt = Math.min(clock.getDelta(), 0.05);
+    if (anim) {
+      anim.t = Math.min(1, anim.t + dt / 0.75);
+      const e = ease(anim.t);
+      camera.position.lerpVectors(anim.p0, anim.p1, e);
+      controls.target.lerpVectors(anim.t0, anim.t1, e);
+      if (anim.t >= 1) anim = null;
+    }
+    controls.update();
+    renderer.render(scene, camera);
+    placeTags();
+    if (firstFrame) {
+      firstFrame = false;
+      loadingEl.hidden = true;
+    }
+  }
+
+  setView(document.documentElement.getAttribute('data-view') || 'completa', true);
+  document.addEventListener('maqueta:view', e => setView(e.detail, false));
+  renderer.setAnimationLoop(tick);
+}
+</script>
+</body>
+</html>
